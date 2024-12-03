@@ -24,11 +24,22 @@ export async function getAllSubReddit(req: Request, res: Response) {
 };
 
 // Get a specific subreddit
-export async function getSubReddit(req: Request, res: Response) {
+export async function getSubReddit(req: Request, res: Response): Promise<Response> {
   const { id } = req.params;
 
-    const subreddit = await prisma.subreddit.findUnique({ where: { id } });
-    if (!subreddit) return res.status(404).json({ error: "Subreddit not found" });
+  try {
+    if (!id) {
+      return res.status(400).json({ error: 'Invalid ID format' });
+    }
 
-    res.json(subreddit);
-};
+    const subreddit = await prisma.subreddit.findUnique({ where: { id } });
+    if (!subreddit) {
+      return res.status(404).json({ error: "Subreddit not found" });
+    }
+
+    return res.json(subreddit);
+  } catch (error) {
+    console.error('Error fetching subreddit:', error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+}
