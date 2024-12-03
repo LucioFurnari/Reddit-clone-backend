@@ -11,3 +11,5 @@ router.get('/subreddit', getAllSubReddit);
 
 // Get Subreddit by id
 router.get('/subreddit/:id', getSubReddit);
+
+export default router;
