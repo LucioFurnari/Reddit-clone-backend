@@ -8,16 +8,16 @@ const JWT_SECRET = process.env.JWT_SECRET || "your_jwt_secret";
 
 
 export async function signup(req: Request, res: Response) {
-  const { email, password } = req.body;
+  const { email, username, password } = req.body;
 
   try {
       const hashedPassword = await bcrypt.hash(password, 10);
       const user = await prisma.user.create({
-        data: { email, password: hashedPassword },
+        data: { email, username, password: hashedPassword },
       });
-      res.status(201).json({ message: "User created", user });
+      return res.status(201).json({ message: "User created", user });
   } catch (err) {
-      res.status(400).json({ error: "Email already exists" });
+      return  res.status(400).json({ error: "Email already exists" });
   }
 };
 
