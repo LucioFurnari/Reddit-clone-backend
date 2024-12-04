@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { PrismaClient } from "@prisma/client";
@@ -6,6 +6,38 @@ import { z } from "zod";
 
 const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET || "your_jwt_secret";
+
+declare global {
+  namespace Express {
+    interface Request {
+      user?: {
+        id: string;
+      };
+    }
+  }
+};
+
+export async function authenticateToken(req: Request, res: Response, next: NextFunction) {
+  const token = req.cookies?.token; // Access the JWT from the cookie
+
+  if (!token) {
+    return res.status(401).json({ error: 'Access token missing' });
+  }
+
+  try {
+    const payload = verifyToken(token);
+    const user = await prisma.user.findUnique({ where: { id: payload.id } });
+
+    if (!user) {
+      return res.status(401).json({ error: 'User not found' });
+    }
+
+    req.user = { id: user.id };
+    next();
+  } catch (error) {
+    return res.status(403).json({ error: 'Invalid or expired token' });
+  }
+}
 
 // Signup validation schema
 const signupSchema = z.object({
