@@ -7,6 +7,7 @@ import { z } from "zod";
 const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET || "your_jwt_secret";
 
+// Signup validation schema
 const signupSchema = z.object({
   email: z.string().email({ message: 'Invalid email format'}),
   username: z.string().min(8, { message: 'Username must be at least 8 characters long'}),
@@ -35,22 +36,47 @@ export async function signup(req: Request, res: Response) {
   }
 };
 
+// Login validation schema
+const loginSchema = z.object({
+  email: z.string().email({ message: "Invalid email format" }),
+  password: z.string().min(8, { message: "Password must be at least 8 characters" }),
+});
+
+type LoginData = z.infer<typeof loginSchema>;
+
 export async function login(req: Request, res: Response) {
-  const { email, password } = req.body;
 
   try {
-    const user = await prisma.user.findUnique({ where: { email } });
+    // Validate request body
+    const data: LoginData = loginSchema.parse(req.body);
+
+    // Find user by email
+    const user = await prisma.user.findUnique({ where: { email: data.email } });
     if (!user) return res.status(404).json({ error: "User not found" });
 
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    // Compare password
+    const isPasswordValid = await bcrypt.compare(data.password, user.password);
     if (!isPasswordValid)
       return res.status(401).json({ error: "Invalid credentials" });
 
+    // Generate JWT token
     const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: "1d" });
-    res.cookie("token", token, { httpOnly: true });
-    res.json({ message: "Logged in", token });
+
+    res.cookie("token", token, {
+      httpOnly: true,
+      sameSite: "strict", // Prevent CSRF
+      maxAge: 24 * 60 * 60 * 1000, // 1 day in milliseconds
+    });
+
+    // Send success response
+    return res.json({ message: "Logged in successfully", token });
   } catch (err) {
-    res.status(500).json({ error: "Something went wrong" });
+    if (err instanceof z.ZodError) {
+      return res.status(400).json({ error: err.errors.map((e) => e.message).join(", ")} );
+    }
+
+    console.error("Error during login: ", err);
+    return res.status(500).json({ error: "Internal server error" });
   }
 };
 
