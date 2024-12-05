@@ -120,3 +120,27 @@ export async function logout(req: Request, res: Response) {
   res.clearCookie("token");
   res.json({ message: "Logged out" });
 };
+
+// Get user data controller
+export async function getUserInfo(req: Request, res: Response) {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.user!.id }, // Use the authenticated user ID
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        createdAt: true,
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    };
+
+    return res.status(200).json(user);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+};
