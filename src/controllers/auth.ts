@@ -49,6 +49,7 @@ const signupSchema = z.object({
 
 type SignupData = z.infer<typeof signupSchema>;
 
+// Signup controller
 export async function signup(req: Request, res: Response) {
 
   try {
@@ -77,6 +78,7 @@ const loginSchema = z.object({
 
 type LoginData = z.infer<typeof loginSchema>;
 
+// Login controller
 export async function login(req: Request, res: Response) {
 
   try {
@@ -113,6 +115,7 @@ export async function login(req: Request, res: Response) {
   }
 };
 
+// Logout controller
 export async function logout(req: Request, res: Response) {
   res.clearCookie("token");
   res.json({ message: "Logged out" });
