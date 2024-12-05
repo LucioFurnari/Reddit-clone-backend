@@ -5,8 +5,8 @@ const prisma = new PrismaClient();
 
 // Create a subreddit
 export async function createSubReddit(req: Request, res: Response) {
-  const { name, description, creatorId } = req.body;
-
+  const { name, description } = req.body;
+  const creatorId = req.user!.id
   try {
     const subreddit = await prisma.subreddit.create({
       data: { name, description, creatorId },
