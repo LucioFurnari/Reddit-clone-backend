@@ -30,3 +30,8 @@ model Subreddit {
   creatorId   String
   creator     User     @relation(fields: [creatorId], references: [id])
 }
+
+model Post {
+  id        String @id @default(uuid()) @db.Uuid
+
+}
