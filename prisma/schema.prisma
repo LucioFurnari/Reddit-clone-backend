@@ -19,7 +19,10 @@ model User {
   username  String
   password  String
   createdAt DateTime    @default(now())
-  Subreddit Subreddit[]
+
+  subreddit Subreddit[]
+  members   UserOnSubreddit[]
+  posts     Post[]
 }
 
 model Subreddit {
@@ -29,9 +32,31 @@ model Subreddit {
   createdAt   DateTime @default(now())
   creatorId   String
   creator     User     @relation(fields: [creatorId], references: [id])
+
+  posts       Post[]
+  members     UserOnSubreddit[]
 }
 
 model Post {
-  id        String @id @default(uuid()) @db.Uuid
+  id          String    @id @default(uuid()) @db.Uuid
+  title       String
+  content     String
+  createdAt   DateTime  @default(now())
+  authorId    String
+  subredditId String
 
+  author      User      @relation(fields: [authorId], references: [id])
+  subreddit   Subreddit @relation(fields: [subredditId], references: [id])
+}
+
+model UserOnSubreddit {
+  id          String    @id @default(uuid()) @db.Uuid
+  userId      String
+  subredditId String
+  joinedAt    DateTime  @default(now())
+
+  user        User      @relation(fields: [userId], references: [id])
+  subreddit   Subreddit @relation(fields: [subredditId], references: [id])
+
+  @@unique([userId, subredditId])  // Ensure a user can join a subreddit only once
 }
