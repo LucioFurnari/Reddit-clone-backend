@@ -58,6 +58,6 @@ export async function vote(req: Request, res: Response) {
 
     return res.status(200).json({ success: true, vote });
   } catch (error) {
-    return res.status(500).json({ error: "Something went wrong.", details: error.message });
+    return res.status(500).json({ error: "Something went wrong.", details: error });
   }
 }
