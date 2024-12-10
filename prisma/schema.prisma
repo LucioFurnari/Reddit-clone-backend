@@ -24,6 +24,7 @@ model User {
   members   UserOnSubreddit[]
   posts     Post[]
   comments  Comment[]
+  Vote      Vote[]
 }
 
 model Subreddit {
@@ -46,10 +47,13 @@ model Post {
   createdAt   DateTime  @default(now())
   authorId    String
   subredditId String
+  karma       Int       @default(0) // Post karma
 
   author      User      @relation(fields: [authorId], references: [id])
   subreddit   Subreddit @relation(fields: [subredditId], references: [id])
   comments    Comment[]
+
+  Vote Vote[]
 }
 
 model Comment {
@@ -65,6 +69,8 @@ model Comment {
   post        Post     @relation(fields: [postId], references: [id])
   parent      Comment? @relation("ParentComment", fields: [parentId], references: [id])
   replies     Comment[]@relation("ParentComment") // Replies to this comment
+
+  Vote Vote[]
 }
 
 model UserOnSubreddit {
@@ -77,4 +83,17 @@ model UserOnSubreddit {
   subreddit   Subreddit @relation(fields: [subredditId], references: [id])
 
   @@unique([userId, subredditId])  // Ensure a user can join a subreddit only once
+}
+
+model Vote {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String
+  postId      String?
+  commentId   String?
+  value       Int
+  user        User     @relation(fields: [userId], references: [id])
+  post        Post?    @relation(fields: [postId], references: [id])
+  comment     Comment? @relation(fields: [commentId], references: [id])
+
+  @@unique([userId, postId, commentId])
 }
