@@ -19,6 +19,8 @@ model User {
   username  String
   password  String
   createdAt DateTime    @default(now())
+  profilePictureUrl String?
+  bio       String?
 
   subreddit Subreddit[]
   members   UserOnSubreddit[]
