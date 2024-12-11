@@ -33,6 +33,8 @@ model Subreddit {
   description String
   createdAt   DateTime @default(now())
   creatorId   String
+  bannerUrl   String?  // Optional banner image
+  iconUrl     String?  // Optional icon image
 
   creator     User     @relation(fields: [creatorId], references: [id])
   posts       Post[]
