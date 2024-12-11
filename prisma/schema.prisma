@@ -33,8 +33,8 @@ model Subreddit {
   description String
   createdAt   DateTime @default(now())
   creatorId   String
-  creator     User     @relation(fields: [creatorId], references: [id])
 
+  creator     User     @relation(fields: [creatorId], references: [id])
   posts       Post[]
   members     UserOnSubreddit[]
 }
@@ -52,23 +52,22 @@ model Post {
   author      User      @relation(fields: [authorId], references: [id])
   subreddit   Subreddit @relation(fields: [subredditId], references: [id])
   comments    Comment[]
-
-  Vote Vote[]
+  votes       Vote[]
 }
 
 model Comment {
-  id          String   @id @default(uuid()) @db.Uuid
+  id          String    @id @default(uuid()) @db.Uuid
   content     String
-  createdAt   DateTime @default(now())
+  createdAt   DateTime  @default(now())
   authorId    String
   postId      String
-  parentId    String?  // For replies to other comments
-  karma       Int      @default(0) // Comment karma
+  parentId    String?   // For replies to other comments
+  karma       Int       @default(0) // Comment karma
 
-  author      User     @relation(fields: [authorId], references: [id])
-  post        Post     @relation(fields: [postId], references: [id])
-  parent      Comment? @relation("ParentComment", fields: [parentId], references: [id])
-  replies     Comment[]@relation("ParentComment") // Replies to this comment
+  author      User      @relation(fields: [authorId], references: [id])
+  post        Post      @relation(fields: [postId], references: [id])
+  parent      Comment?  @relation("ParentComment", fields: [parentId], references: [id])
+  replies     Comment[] @relation("ParentComment") // Replies to this comment
 
   Vote Vote[]
 }
