@@ -37,6 +37,7 @@ model Subreddit {
   creatorId   String
   bannerUrl   String?  // Optional banner image
   iconUrl     String?  // Optional icon image
+  rules       Json?    // Rule for the subreddit
 
   creator     User     @relation(fields: [creatorId], references: [id])
   posts       Post[]
