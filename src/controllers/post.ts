@@ -41,3 +41,25 @@ export async function createPost(req: Request, res: Response) {
     return  res.status(500).json({ error: "Internal server error" });
   }
 };
+
+// Get posts by subreddit
+export async function getSubRedditPosts(req: Request, res: Response) {
+  const { subredditId } = req.params;
+
+  try {
+    const posts = await prisma.post.findMany({
+      where: { subredditId },
+      include: {
+        author: {
+          select: { id: true, username: true }, // Include author info
+        },
+        subreddit: {
+          select: { id: true, name: true }, // Include subreddit info
+        },
+      },
+      orderBy: { createdAt: "desc" }, // Order by creation date
+    });
+  } catch (error) {
+    
+  }
+}
