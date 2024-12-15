@@ -59,7 +59,14 @@ export async function getSubRedditPosts(req: Request, res: Response) {
       },
       orderBy: { createdAt: "desc" }, // Order by creation date
     });
+
+    if (posts.length === 0) {
+      return res.status(404).json({ message: "No posts found for this subreddit." });
+    }
+
+    return res.status(200).json({ message: "Post fetched successfully", posts });
   } catch (error) {
-    
+    console.error("Error fetching posts:", error);
+    return res.status(500).json({ error: "Internal server error" });
   }
 }
