@@ -21,6 +21,7 @@ export async function createPost(req: Request, res: Response) {
     // Parse and validate request body
     const data: CreatePostData = createPostSchema.parse(req.body);
 
+    // Create post
     const post = await prisma.post.create({
       data: {
         title: data.title,
@@ -36,6 +37,7 @@ export async function createPost(req: Request, res: Response) {
       // Handle validation errors
       return res.status(400).json({ error: err.errors.map(e => e.message).join(', ') });
     }
+    console.error("Error creating post:", err)
     return  res.status(500).json({ error: "Internal server error" });
   }
 };
