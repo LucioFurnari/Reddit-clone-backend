@@ -69,4 +69,42 @@ export async function getSubRedditPosts(req: Request, res: Response) {
     console.error("Error fetching posts:", error);
     return res.status(500).json({ error: "Internal server error" });
   }
-}
+};
+
+// Get post by id
+export async function getPostById(req: Request, res: Response) {
+  const { postId } = req.params;
+
+  try {
+    // Fetch the post by ID
+    const post = await prisma.post.findUnique({
+      where: { id: postId },
+      include: {
+        author: {
+          select: { id: true, username: true, profilePictureUrl: true}
+        },
+        subreddit: {
+          select: { id: true, name: true, description: true }, // Include subreddit  
+        },
+        comments: {
+          select: {
+            id: true,
+            content: true,
+            createdAt: true,
+            author: { select: { id: true, username: true } },
+          },
+        },
+      },
+    });
+
+    // Handle case when post is not found
+    if (!post) {
+      return res.status(404).json({ error: "Post not found." });
+    }
+
+    return res.status(200).json({ message: "Post fetched successfully", post });
+  } catch (error) {
+    console.error("Error fetching post: ", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
