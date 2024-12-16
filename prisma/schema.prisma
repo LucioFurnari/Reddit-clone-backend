@@ -82,6 +82,7 @@ model UserOnSubreddit {
   userId      String
   subredditId String
   joinedAt    DateTime  @default(now())
+  role        String    @default("MEMBER")
 
   user        User      @relation(fields: [userId], references: [id])
   subreddit   Subreddit @relation(fields: [subredditId], references: [id])
