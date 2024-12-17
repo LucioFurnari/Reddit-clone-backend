@@ -155,6 +155,7 @@ export async function updatePost(req: Request, res: Response) {
       },
     });
 
+    return res.status(200).json({ message: "Post updated successfully.", post: updatedPost });
   } catch (error) {
     if (error instanceof z.ZodError) {
       // Handle validation errors
