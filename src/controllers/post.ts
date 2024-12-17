@@ -204,7 +204,7 @@ export async function deletePost(req: Request, res: Response) {
       where: { id: postId },
     });
 
-    return res.status(200).json({ message: "Post updated successfully.", post: updatedPost });
+    return res.status(200).json({ message: "Post deleted successfully.", post: updatedPost });
   } catch (error) {
     console.error("Error deleting post:", error);
     return res.status(500).json({ error: "Internal server error." });
