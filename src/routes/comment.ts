@@ -5,3 +5,5 @@ const router = Router();
 
 // Create comment
 router.post("/posts/:postId/comments", createComment);
+
+export default router;
