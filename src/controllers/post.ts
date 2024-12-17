@@ -115,10 +115,10 @@ export async function updatePost(req: Request, res: Response) {
   const { postId } = req.params;
   const userId = req.user!.id;
 
-  // Parse and validate request body
-  const data: CreatePostData = createPostSchema.parse(req.body);
-
   try {
+    // Parse and validate request body
+    const data: CreatePostData = createPostSchema.parse(req.body);
+
     // Fetch the post with related data
     const post = await prisma.post.findUnique({
       where: { id: postId },
