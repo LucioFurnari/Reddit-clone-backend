@@ -14,6 +14,9 @@ router.get("/subreddit/posts/:postId", getPostById);
 router.get("/subreddit/:subredditId/posts", getSubRedditPosts);
 
 // Edit post by id
-router.put("/posts/:postId", editPost);
+router.put("/posts/:postId", authenticateToken, editPost);
+
+// Delete post by id
+router.delete("/posts/:postId", authenticateToken, deletePost);
 
 export default router;
