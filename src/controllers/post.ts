@@ -109,9 +109,9 @@ export async function getPostById(req: Request, res: Response) {
   }
 };
 
-// Edit post
+// Edit post by id
 
-export async function updatePost(req: Request, res: Response) {
+export async function editPost(req: Request, res: Response) {
   const { postId } = req.params;
   const userId = req.user!.id;
 
@@ -161,7 +161,52 @@ export async function updatePost(req: Request, res: Response) {
       // Handle validation errors
       return res.status(400).json({ error: error.errors.map(e => e.message).join(', ') });
     };
-    console.error("Error editing or deleting post:", error);
+    console.error("Error editing post:", error);
+    return res.status(500).json({ error: "Internal server error." });
+  }
+};
+
+// Delete post by id
+
+export async function deletePost(req: Request, res: Response) {
+  const { postId } = req.params;
+  const userId = req.user!.id;
+  try {
+    // Fetch the post with related data
+    const post = await prisma.post.findUnique({
+      where: { id: postId },
+      include: {
+        author: { select: { id: true } },
+        subreddit: { select: { id: true } },
+      },
+    });
+
+    if (!post) {
+      return res.status(404).json({ error: "Post not found." });
+    };
+
+    // Check if the user is the author or a moderator
+    const isAuthor = post.author.id === userId;
+    const isModerator = await prisma.userOnSubreddit.findFirst({
+      where: {
+        userId,
+        subredditId: post.subreddit.id,
+        role: "MODERATOR", // Check if is a moderator
+      }
+    });
+
+    if (!isAuthor && !isModerator) {
+      return res.status(403).json({ error: "You are not authorized to perform this action." });
+    };
+
+    // Delete the post
+    const updatedPost = await prisma.post.delete({
+      where: { id: postId },
+    });
+
+    return res.status(200).json({ message: "Post updated successfully.", post: updatedPost });
+  } catch (error) {
+    console.error("Error deleting post:", error);
     return res.status(500).json({ error: "Internal server error." });
   }
 };
