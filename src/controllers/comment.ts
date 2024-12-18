@@ -58,3 +58,41 @@ export async function createComment(req: Request, res: Response) {
     return res.status(500).json({ error: "Internal server error." });
   };
 };
+
+// Get comments of post
+export async function getComments(req: Request, res: Response) {
+  const { postId } = req.params;
+
+  try {
+    // Check if the post exists
+    const post = await prisma.post.findUnique({
+      where: { id: postId },
+    });
+
+    if (!post) {
+      return res.status(404).json({ error: "Post not found." });
+    };
+
+    // Get comments
+    const comments = await prisma.comment.findMany({
+      where: { postId: postId },
+      include: {
+        author: { select: { id: true, username: true, profilePictureUrl: true} },
+        replies: {
+          select: {
+            id: true,
+            content: true,
+            createdAt: true,
+            author: { select: { id: true, username: true, profilePictureUrl: true } },
+          },
+        },
+      },
+      orderBy: { createdAt: "asc" }, // Sort by creation time
+    });
+
+    return res.status(200).json({ message: "Comments fetched successfully", comments });
+  } catch (error) {
+    console.error("Error creating comment: ", error);
+    return res.status(500).json({ error: "Internal server error." });
+  }
+};
