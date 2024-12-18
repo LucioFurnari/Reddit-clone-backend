@@ -96,3 +96,47 @@ export async function getComments(req: Request, res: Response) {
     return res.status(500).json({ error: "Internal server error." });
   }
 };
+
+// Edit a comment
+export async function editComment(req: Request, res: Response) {
+  const { commentId } = req.params;
+  const userId = req.user!.id;
+
+  // Validate and parse request body
+  const data = createCommentsSchema.parse(req.body);
+
+  try {
+    // Fetch the comment to ensure it exists and the user is the author
+    const comment = await prisma.comment.findUnique({
+      where: { id: commentId },
+      select: { id: true, authorId: true, content: true },
+    });
+
+    if (!comment) {
+      return res.status(404).json({ error: "Comment not found." });
+    };
+
+    if (comment.authorId === userId) {
+      return res.status(403).json({ error: "You are not authorized to edit this comment." });
+    }
+
+    // Update the comment
+    const updatedComment = await prisma.comment.update({
+      where: { id: commentId },
+      data: { content: data.content },
+      select: {
+        id: true,
+        content: true,
+        updatedAt: true
+      },
+    });
+
+    return res.status(200).json({ message: "Comment updated successfully.", comment: updatedComment });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: error.errors.map((e) => e.message).join(", ") });
+    };
+    console.error("Error editing comment: ", error);
+    return res.status(500).json({ error: "Internal server error." });
+  }
+};
