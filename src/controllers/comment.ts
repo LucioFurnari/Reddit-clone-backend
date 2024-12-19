@@ -140,3 +140,59 @@ export async function editComment(req: Request, res: Response) {
     return res.status(500).json({ error: "Internal server error." });
   }
 };
+
+// Delete a comment
+export async function deleteComment(req: Request, res: Response) {
+  const { commentId } = req.params;
+  const userId = req.user!.id;
+  try {
+    
+  // Fetch the subreddit ID from the comment
+  const commentWithSubreddit = await prisma.comment.findUnique({
+    where: { id: commentId },
+    select: {
+      id: true,
+      authorId: true,
+      post: {
+        select: {
+          subredditId: true,
+        },
+      },
+    },
+  });
+
+  if (!commentWithSubreddit) {
+    return res.status(404).json({ error: "Comment not found." });
+  }
+
+  const { subredditId, authorId } = {
+    subredditId: commentWithSubreddit.post.subredditId,
+    authorId: commentWithSubreddit.authorId,
+  };
+
+  // Check if the user is the author or a moderator
+  const isAuthor = authorId === userId;
+  
+  const isModerator = await prisma.userOnSubreddit.findFirst({
+    where: {
+      userId,
+      subredditId,
+      role: "MODERATOR",
+    },
+  });
+
+  if (!isAuthor && !isModerator) {
+    return res.status(403).json({ error: "You are not authorized to delete this comment." });
+  }
+
+  // Delete the comment
+  await prisma.comment.delete({
+    where: { id: commentId },
+  });
+
+  return res.status(200).json({ message: "Comment deleted successfully." });
+  } catch (error) {
+    console.error("Error deleting comment:", error);
+    return res.status(500).json({ error: "Internal server error." });
+  }
+};
