@@ -42,4 +42,10 @@ export async function getSubReddit(req: Request, res: Response): Promise<Respons
     console.error('Error fetching subreddit:', error);
     return res.status(500).json({ error: "Internal server error" });
   }
+};
+
+// Subscribe to subrredit
+export async function subscribeToSubreddit(req: Request, res: Response) {
+  const { subredditId } = req.params;
+  
 }
