@@ -44,7 +44,7 @@ export async function getSubReddit(req: Request, res: Response): Promise<Respons
   }
 };
 
-// Subscribe to subrredit
+// Subscribe to subreddit
 export async function subscribeToSubreddit(req: Request, res: Response) {
   const { subredditId } = req.params;
   const userId = req.user!.id;
@@ -79,6 +79,33 @@ export async function subscribeToSubreddit(req: Request, res: Response) {
     return res.status(201).json({ message: "Successfully subscribed to subreddit.", subscription });
   } catch (error) {
     console.error("Error subscribing to subreddit:", error);
+    return res.status(500).json({ error: "Internal server error." });
+  }
+};
+
+// Unsubscribe from subreddit
+export async function unsubscribeFromSubreddit(req: Request, res: Response) {
+  const { subredditId } = req.params;
+  const userId = req.user!.id;
+
+  try {
+    // Check if the subscription exists
+    const subscription = await prisma.userOnSubreddit.findFirst({
+      where: { userId, subredditId },
+    });
+
+    if (!subscription) {
+      return res.status(404).json({ error: "Subscription not found." });
+    }
+
+    // Delete the subscription
+    await prisma.userOnSubreddit.delete({
+      where: { id: subscription.id },
+    });
+
+    return res.status(200).json({ message: "Successfully unsubscribed from subreddit." });
+  } catch (error) {
+    console.error("Error unsubscribing from subreddit:", error);
     return res.status(500).json({ error: "Internal server error." });
   }
 };
