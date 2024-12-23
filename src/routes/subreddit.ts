@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createSubReddit, getAllSubReddit, getSubReddit } from "../controllers/subreddit";
+import { createSubReddit, getAllSubReddit, getSubReddit, subscribeToSubreddit, unsubscribeFromSubreddit } from "../controllers/subreddit";
 import { authenticateToken } from "../controllers/auth";
 
 const router = Router();
@@ -11,6 +11,12 @@ router.post('/subreddit', authenticateToken, createSubReddit);
 router.get('/subreddit', getAllSubReddit);
 
 // Get Subreddit by id
-router.get('/subreddit/:id', getSubReddit);
+router.get('/subreddit/:subredditId', getSubReddit);
+
+// Subscribe to a subreddit
+router.post('/subreddit/:subredditId/subscribe', authenticateToken, subscribeToSubreddit);
+
+// Unsubscribe from a subreddit
+router.delete('/subreddit/:subredditId/unsubscribe', authenticateToken, unsubscribeFromSubreddit);
 
 export default router;
