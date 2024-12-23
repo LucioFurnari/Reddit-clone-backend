@@ -42,3 +42,34 @@ export async function updateUserProfile(req: Request, res: Response) {
     return res.status(500).json({ error: "Internal server error" });
   }
 }
+
+// Get Subscribed subreddits
+export async function getSubscribedSubreddits(req: Request, res: Response) {
+  const userId = req.user!.id;
+
+  try {
+    // Fetch subscribed subreddits for the user
+    const subscribedSubreddits = await prisma.userOnSubreddit.findMany({
+      where: { userId },
+      include: {
+        subreddit: {
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            iconUrl: true,
+            bannerUrl: true,
+          },
+        },
+      },
+    });
+
+    // Extract subreddit details from the subscription data
+    const subreddits = subscribedSubreddits.map((subscription) => subscription.subreddit);
+
+    return res.status(200).json({ message: "Subscribed subreddits fetches successfully.", subreddits });
+  } catch (error) {
+    console.error("Error fetching subscribed subreddits:", error);
+    return res.status(500).json({ error: "Internal server error." });
+  }
+};
