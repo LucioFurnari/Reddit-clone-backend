@@ -25,14 +25,14 @@ export async function getAllSubReddit(req: Request, res: Response) {
 
 // Get a specific subreddit
 export async function getSubReddit(req: Request, res: Response): Promise<Response> {
-  const { id } = req.params;
+  const { subredditId } = req.params;
 
   try {
-    if (!id) {
+    if (!subredditId) {
       return res.status(400).json({ error: 'Invalid ID format' });
     }
 
-    const subreddit = await prisma.subreddit.findUnique({ where: { id } });
+    const subreddit = await prisma.subreddit.findUnique({ where: { id: subredditId } });
     if (!subreddit) {
       return res.status(404).json({ error: "Subreddit not found" });
     }
