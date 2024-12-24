@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { query, Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
 import { z } from "zod";
 
@@ -207,6 +207,23 @@ export async function deletePost(req: Request, res: Response) {
     return res.status(200).json({ message: "Post deleted successfully.", post: updatedPost });
   } catch (error) {
     console.error("Error deleting post:", error);
+    return res.status(500).json({ error: "Internal server error." });
+  }
+};
+
+// Define Zod schema for query validation
+const searchPostSchema = z.object({
+  query: z.string().min(1, { message: "Query parameter is required and cannot be empty." }),
+});
+
+export async function searchPosts(req: Request, res: Response) {
+  try {
+    
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: error.errors.map((e) => e.message).join(", ") });
+    }
+    console.error("Error searching posts:", error);
     return res.status(500).json({ error: "Internal server error." });
   }
 };
