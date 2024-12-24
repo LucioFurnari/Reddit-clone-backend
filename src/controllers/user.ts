@@ -47,6 +47,10 @@ export async function updateUserProfile(req: Request, res: Response) {
 export async function getSubscribedSubreddits(req: Request, res: Response) {
   const userId = req.user!.id;
 
+   // Extract and parse query parameters with defaults
+   const limit = req.query.limit ? parseInt(req.query.limit as string) : 10; // Default to 10
+   const offset = req.query.offset ? parseInt(req.query.offset as string) : 0; // Default to 0
+
   try {
     // Fetch subscribed subreddits for the user
     const subscribedSubreddits = await prisma.userOnSubreddit.findMany({
@@ -62,6 +66,8 @@ export async function getSubscribedSubreddits(req: Request, res: Response) {
           },
         },
       },
+      take: limit,
+      skip: offset,
     });
 
     if (subscribedSubreddits.length === 0) {
