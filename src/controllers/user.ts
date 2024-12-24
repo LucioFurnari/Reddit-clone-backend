@@ -64,6 +64,10 @@ export async function getSubscribedSubreddits(req: Request, res: Response) {
       },
     });
 
+    if (subscribedSubreddits.length === 0) {
+      return res.status(200).json({ message: "You are not subscribed to any subreddits.", subreddits: [] });
+    };
+
     // Extract subreddit details from the subscription data
     const subreddits = subscribedSubreddits.map((subscription) => subscription.subreddit);
 
