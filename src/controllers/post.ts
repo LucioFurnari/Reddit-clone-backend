@@ -212,13 +212,33 @@ export async function deletePost(req: Request, res: Response) {
 };
 
 // Define Zod schema for query validation
-const searchPostSchema = z.object({
+const searchPostsSchema = z.object({
   query: z.string().min(1, { message: "Query parameter is required and cannot be empty." }),
 });
 
 export async function searchPosts(req: Request, res: Response) {
   try {
-    
+    // Validate query parameters
+    const { query } = searchPostsSchema.parse(req.query);
+
+    const posts = await prisma.post.findMany({
+      where: {
+        OR: [
+          { title: { contains: query, mode: "insensitive" } },
+          { content: { contains: query, mode: "insensitive" } },
+        ],
+      },
+      select: {
+        id: true,
+        title: true,
+        content: true,
+        createdAt: true,
+        author: { select: { id: true, username: true } },
+        subreddit: { select: { id: true, name: true } },
+      },
+    });
+
+    return res.status(200).json({ message: "Posts fetched successfully.", posts });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: error.errors.map((e) => e.message).join(", ") });
