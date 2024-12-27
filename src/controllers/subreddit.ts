@@ -33,6 +33,38 @@ export async function createSubReddit(req: Request, res: Response) {
   }
 };
 
+// Delete subreddit
+export async function deleteSubReddit(req: Request, res: Response) {
+  const { subredditId } = req.params;
+  const userId = req.user!.id;
+
+  try {
+    // Check if the subreddit exists
+    const subreddit = await prisma.subreddit.findUnique({
+      where: { id: subredditId },
+    });
+
+    if (!subreddit) {
+      return res.status(404).json({ error: "Subreddit not found." });
+    }
+
+    // Check if the user is the creator of the subreddit
+    if (subreddit.creatorId !== userId) {
+      return res.status(403).json({ error: "You are not authorized to delete this subreddit." });
+    }
+
+    // Delete the subreddit
+    await prisma.subreddit.delete({
+      where: { id: subredditId },
+    });
+
+    res.status(200).json({ message: "Subreddit deleted successfully." });
+  } catch (error) {
+    console.error("Error deleting subreddit:", error);
+    res.status(500).json({ error: "Internal server error." });
+  }
+};
+
 // Get all subreddits
 export async function getAllSubReddit(req: Request, res: Response) {
   const subreddits = await prisma.subreddit.findMany();
