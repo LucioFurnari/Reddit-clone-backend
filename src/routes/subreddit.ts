@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createSubReddit, getAllSubReddit, getSubReddit, subscribeToSubreddit, unsubscribeFromSubreddit, searchSubreddits } from "../controllers/subreddit";
+import { createSubReddit, getAllSubReddit, getSubReddit, subscribeToSubreddit, unsubscribeFromSubreddit, searchSubreddits, assignModerator, removeModerator } from "../controllers/subreddit";
 import { authenticateToken } from "../controllers/auth";
 
 const router = Router();
@@ -21,4 +21,7 @@ router.delete("/subreddit/:subredditId/unsubscribe", authenticateToken, unsubscr
 
 // Search subreddit by name
 router.get("/subreddits/search", searchSubreddits);
+
+//
+router.post("/subreddits/:subredditId/moderators", assignModerator);
 export default router;
