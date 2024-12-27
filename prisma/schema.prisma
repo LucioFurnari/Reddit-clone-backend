@@ -55,7 +55,7 @@ model Post {
   karma       Int       @default(0) // Post karma
 
   author      User      @relation(fields: [authorId], references: [id])
-  subreddit   Subreddit @relation(fields: [subredditId], references: [id])
+  subreddit   Subreddit @relation(fields: [subredditId], references: [id], onDelete: Cascade)
   comments    Comment[]
   votes       Vote[]
 }
@@ -86,7 +86,7 @@ model UserOnSubreddit {
   role        String    @default("MEMBER")
 
   user        User      @relation(fields: [userId], references: [id])
-  subreddit   Subreddit @relation(fields: [subredditId], references: [id])
+  subreddit   Subreddit @relation(fields: [subredditId], references: [id], onDelete: Cascade)
 
   @@unique([userId, subredditId])  // Ensure a user can join a subreddit only once
 }
