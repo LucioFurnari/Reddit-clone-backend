@@ -4,17 +4,32 @@ import { z } from "zod";
 
 const prisma = new PrismaClient();
 
+// Zod schema for subreddit creation
+const createSubRedditSchema = z.object({
+  name: z.string().min(3, { message: "Subreddit name must be at least 3 characters." }).max(50),
+  description: z.string().min(10, { message: "Description must be at least 10 characters." }).max(500),
+});
+
 // Create a subreddit
 export async function createSubReddit(req: Request, res: Response) {
-  const { name, description } = req.body;
-  const creatorId = req.user!.id
-  try {
+  // Validate input
+  const { name, description } = createSubRedditSchema.parse(req.body);
+  const creatorId = req.user!.id;
+
+  try{
+    // Create the subreddit
     const subreddit = await prisma.subreddit.create({
       data: { name, description, creatorId },
     });
-    res.status(201).json(subreddit);
+  
+    return res.status(201).json({ message: "Subreddit created successfully.", subreddit });
   } catch (error) {
-    res.status(400).json({ error: "Subreddit name already exists"});
+    if (error instanceof z.ZodError) {
+      // Handle validation errors
+      return res.status(400).json({ error: error.errors.map((e) => e.message).join(", ") });
+    }
+    console.error("Error creating subreddit:", error);
+    return res.status(500).json({ error: "Internal server error." });
   }
 };
 
