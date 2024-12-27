@@ -33,6 +33,38 @@ export async function createSubReddit(req: Request, res: Response) {
   }
 };
 
+// Define the validation schema using Zod
+const editSubredditSchema = z.object({
+  description: z.string().trim().optional(),
+  bannerUrl: z.string().url().optional(),
+  iconUrl: z.string().url().optional(),
+});
+
+// Edit subreddit
+export async function editSubreddit(req: Request, res: Response) {
+  const { subredditId } = req.params;
+  const userId = req.user!.id;
+
+  try {
+    // Validate the request body
+    const data = editSubredditSchema.safeParse(req.body);
+
+    // Check if the subreddit exits
+    const subreddit = await prisma.subreddit.findUnique({
+      where: { id: subredditId },
+    });
+
+    if (!subreddit) {
+      return res.status(404).json({ error: "Subreddit not found." });
+    }
+    
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      // Handle validation errors
+      return res.status(400).json({ error: error.errors.map((e) => e.message).join(", ") });
+    }
+  }
+};
 // Delete subreddit
 export async function deleteSubReddit(req: Request, res: Response) {
   const { subredditId } = req.params;
