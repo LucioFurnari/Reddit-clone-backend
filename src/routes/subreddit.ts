@@ -22,6 +22,9 @@ router.delete("/subreddit/:subredditId/unsubscribe", authenticateToken, unsubscr
 // Search subreddit by name
 router.get("/subreddits/search", searchSubreddits);
 
-//
+// Add moderator to subreddit
 router.post("/subreddits/:subredditId/moderators", assignModerator);
+
+// Remove moderator from subreddit
+router.delete("/subreddits/:subredditId/moderators", removeModerator);
 export default router;
