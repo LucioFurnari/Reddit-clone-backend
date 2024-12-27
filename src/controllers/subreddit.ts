@@ -145,3 +145,74 @@ export async function searchSubreddits(req: Request, res: Response) {
     return res.status(500).json({ error: "Internal server error." });
   }
 };
+
+// Zod schema to validate input
+const assignModeratorSchema = z.object({
+  userId: z.string().uuid({ message: "A valid user ID is required." }),
+});
+
+export async function assignModerator(req: Request, res: Response) {
+  const { subredditId } = req.params;
+
+  try {
+    // Validate input
+    const { userId } = assignModeratorSchema.parse(req.body);
+
+    // Ensure the subreddit exists
+    const subreddit = await prisma.subreddit.findUnique({
+      where: { id: subredditId },
+    });
+
+    if (!subreddit) {
+      return res.status(404).json({ error: "Subreddit not found." });
+    }
+
+    // Add or update the user's role to MODERATOR
+    await prisma.userOnSubreddit.upsert({
+      where: { userId_subredditId: { userId, subredditId } },
+      create: { userId, subredditId, role: "MODERATOR" },
+      update: { role: "MODERATOR" },
+    });
+
+    return res.status(200).json({ message: "User assigned as moderator successfully." });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: error.errors.map((e) => e.message).join(", ") });
+    }
+    console.error("Error assigning moderator:", error);
+    return res.status(500).json({ error: "Internal server error." });
+  }
+};
+
+export async function removeModerator(req: Request, res: Response) {
+  const { subredditId, userId } = req.params;
+
+  try {
+    // Ensure the subreddit exists
+    const subreddit = await prisma.subreddit.findUnique({
+      where: { id: subredditId },
+    });
+
+    if (!subreddit) {
+      return res.status(404).json({ error: "Subreddit not found." });
+    }
+
+    // Remove the moderator role if it exists
+    const userOnSubreddit = await prisma.userOnSubreddit.findUnique({
+      where: { userId_subredditId: { userId, subredditId } },
+    });
+
+    if (!userOnSubreddit || userOnSubreddit.role !== "MODERATOR") {
+      return res.status(400).json({ error: "User is not a moderator of this subreddit." });
+    }
+
+    await prisma.userOnSubreddit.delete({
+      where: { userId_subredditId: { userId, subredditId } },
+    });
+
+    return res.status(200).json({ message: "Moderator removed successfully." });
+  } catch (error) {
+    console.error("Error removing moderator:", error);
+    return res.status(500).json({ error: "Internal server error." });
+  }
+};
