@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createSubReddit, getAllSubReddit, getSubReddit, subscribeToSubreddit, unsubscribeFromSubreddit, searchSubreddits, assignModerator, removeModerator } from "../controllers/subreddit";
+import { createSubReddit, getAllSubReddit, getSubReddit, subscribeToSubreddit, unsubscribeFromSubreddit, searchSubreddits, assignModerator, removeModerator, editSubreddit } from "../controllers/subreddit";
 import { authenticateToken } from "../controllers/auth";
 
 const router = Router();
@@ -27,4 +27,7 @@ router.post("/subreddits/:subredditId/moderators", assignModerator);
 
 // Remove moderator from subreddit
 router.delete("/subreddits/:subredditId/moderators", removeModerator);
+
+// Edit subreddit
+router.put("/subreddits/:subredditId", editSubreddit);
 export default router;
