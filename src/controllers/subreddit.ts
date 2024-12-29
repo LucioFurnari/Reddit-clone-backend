@@ -58,6 +58,20 @@ export async function editSubreddit(req: Request, res: Response) {
       return res.status(404).json({ error: "Subreddit not found." });
     }
     
+    // Check if the user is the creator of the subreddit
+    if (subreddit.creatorId !== userId) {
+      return res.status(403).json({ error: "You are not authorized to edit this subreddit." });
+    };
+
+    // Update the subreddit
+    const updatedSubreddit = await prisma.subreddit.update({
+      where: { id: subredditId },
+      data: {
+        ...data.data, // Only update fields provided in the request body
+      },
+    });
+
+    return res.status(200).json({ message: "Subreddit updated successfully.", subreddit: updatedSubreddit });
   } catch (error) {
     if (error instanceof z.ZodError) {
       // Handle validation errors
@@ -65,6 +79,7 @@ export async function editSubreddit(req: Request, res: Response) {
     }
   }
 };
+
 // Delete subreddit
 export async function deleteSubReddit(req: Request, res: Response) {
   const { subredditId } = req.params;
