@@ -277,7 +277,7 @@ export async function assignModerator(req: Request, res: Response) {
       update: { role: "MODERATOR" },
     });
 
-    return res.status(200).json({ message: "User assigned as moderator successfully." });
+    return res.status(200).json({ message: "User assigned as moderator successfully.", userId });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: error.errors.map((e) => e.message).join(", ") });
@@ -325,7 +325,7 @@ export async function removeModerator(req: Request, res: Response) {
       where: { userId_subredditId: { userId, subredditId } },
     });
 
-    return res.status(200).json({ message: "Moderator removed successfully." });
+    return res.status(200).json({ message: "Moderator removed successfully.", userId });
   } catch (error) {
     console.error("Error removing moderator:", error);
     return res.status(500).json({ error: "Internal server error." });
