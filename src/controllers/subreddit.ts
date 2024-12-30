@@ -250,6 +250,7 @@ const assignModeratorSchema = z.object({
 
 export async function assignModerator(req: Request, res: Response) {
   const { subredditId } = req.params;
+  const requestingUserId = req.user!.id;
 
   try {
     // Validate input
@@ -262,6 +263,11 @@ export async function assignModerator(req: Request, res: Response) {
 
     if (!subreddit) {
       return res.status(404).json({ error: "Subreddit not found." });
+    }
+
+    // Ensure the requesting user is the creator of the subreddit
+    if (subreddit.creatorId !== requestingUserId) {
+      return res.status(403).json({ error: "You are not authorized to assign moderators for this subreddit." });
     }
 
     // Add or update the user's role to MODERATOR
