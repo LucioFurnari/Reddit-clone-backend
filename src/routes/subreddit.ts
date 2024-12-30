@@ -23,10 +23,10 @@ router.delete("/subreddit/:subredditId/unsubscribe", authenticateToken, unsubscr
 router.get("/subreddits/search", searchSubreddits);
 
 // Add moderator to subreddit
-router.post("/subreddits/:subredditId/moderators/:userId", authenticateToken, assignModerator);
+router.post("/subreddits/:subredditId/moderators", authenticateToken, assignModerator);
 
 // Remove moderator from subreddit
-router.delete("/subreddits/:subredditId/moderators/:userId", authenticateToken, removeModerator);
+router.delete("/subreddits/:subredditId/moderators", authenticateToken, removeModerator);
 
 // Edit subreddit
 router.put("/subreddits/:subredditId", authenticateToken, editSubreddit);
