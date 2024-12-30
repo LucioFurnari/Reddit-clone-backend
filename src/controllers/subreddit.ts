@@ -240,6 +240,9 @@ export async function searchSubreddits(req: Request, res: Response) {
   }
 };
 
+
+// Assign moderator
+
 // Zod schema to validate input
 const assignModeratorSchema = z.object({
   userId: z.string().uuid({ message: "A valid user ID is required." }),
@@ -278,8 +281,11 @@ export async function assignModerator(req: Request, res: Response) {
   }
 };
 
+// Remove moderator
+
 export async function removeModerator(req: Request, res: Response) {
   const { subredditId, userId } = req.params;
+  const requestingUserId = req.user!.id;
 
   try {
     // Ensure the subreddit exists
@@ -289,7 +295,12 @@ export async function removeModerator(req: Request, res: Response) {
 
     if (!subreddit) {
       return res.status(404).json({ error: "Subreddit not found." });
-    }
+    };
+
+    // Ensure the requesting user is the creator of the subreddit
+    if (subreddit.creatorId !== requestingUserId) {
+      return res.status(403).json({ error: "You are not authorized to remove moderators from this subreddit." });
+    };
 
     // Remove the moderator role if it exists
     const userOnSubreddit = await prisma.userOnSubreddit.findUnique({
@@ -300,6 +311,7 @@ export async function removeModerator(req: Request, res: Response) {
       return res.status(400).json({ error: "User is not a moderator of this subreddit." });
     }
 
+    // Remove the moderator role
     await prisma.userOnSubreddit.delete({
       where: { userId_subredditId: { userId, subredditId } },
     });
