@@ -290,10 +290,13 @@ export async function assignModerator(req: Request, res: Response) {
 // Remove moderator
 
 export async function removeModerator(req: Request, res: Response) {
-  const { subredditId, userId } = req.params;
+  const { subredditId } = req.params;
   const requestingUserId = req.user!.id;
 
   try {
+    // Validate input
+    const { userId } = assignModeratorSchema.parse(req.body);
+    
     // Ensure the subreddit exists
     const subreddit = await prisma.subreddit.findUnique({
       where: { id: subredditId },
