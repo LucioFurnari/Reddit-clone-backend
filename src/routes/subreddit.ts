@@ -19,7 +19,7 @@ router.post("/subreddit/:subredditId/subscribe", authenticateToken, subscribeToS
 // Unsubscribe from a subreddit
 router.delete("/subreddit/:subredditId/unsubscribe", authenticateToken, unsubscribeFromSubreddit);
 
-// Search subreddit by name
+// Search subreddit by name - use query - example: /subreddits/search?query=example
 router.get("/subreddits/search", searchSubreddits);
 
 // Add moderator to subreddit
