@@ -27,6 +27,7 @@ model User {
   posts     Post[]
   comments  Comment[]
   Vote      Vote[]
+  BannedUser BannedUser[]
 }
 
 model Subreddit {
@@ -42,6 +43,7 @@ model Subreddit {
   creator     User     @relation(fields: [creatorId], references: [id])
   posts       Post[]
   members     UserOnSubreddit[]
+  bannedUsers BannedUser[]
 }
 
 model Post {
@@ -89,6 +91,19 @@ model UserOnSubreddit {
   subreddit   Subreddit @relation(fields: [subredditId], references: [id], onDelete: Cascade)
 
   @@unique([userId, subredditId])  // Ensure a user can join a subreddit only once
+}
+
+model BannedUser {
+  id            String    @id @default(uuid()) @db.Uuid
+  subredditId   String
+  userId        String
+  bannedAt      DateTime  @default(now())
+  reason        String?
+
+  subreddit     Subreddit @relation(fields: [subredditId], references: [id])
+  user          User      @relation(fields: [userId], references: [id])
+
+  @@unique([subredditId, userId])
 }
 
 model Vote {
