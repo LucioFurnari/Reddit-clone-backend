@@ -43,4 +43,10 @@ router.delete("/subreddits/:subredditId/moderators", authenticateToken, removeMo
 // Edit subreddit
 router.put("/subreddits/:subredditId", authenticateToken, editSubreddit);
 
+// Ban user from subreddit
+router.post("/subreddits/:subredditId/ban", authenticateToken, banUser);
+
+// Unban user from subreddit
+router.post("/subreddits/:subredditId/unban", authenticateToken, unbanUser);
+
 export default router;
