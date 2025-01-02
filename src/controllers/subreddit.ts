@@ -338,4 +338,34 @@ export async function banUser(req: Request, res: Response) {
   const { subredditId } = req.params;
   const { userId, reason } = req.body;
   const moderatorId = req.user!.id;
+
+  try {
+    // Check if the requester is a moderator
+    const subreddit = await prisma.subreddit.findFirst({
+      where: { id: parseInt(subredditId), creatorId: moderatorId },
+    });
+
+    if (!subreddit) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+
+    // Add user to banned list
+    await prisma.bannedUser.create({
+      data: {
+        subredditId: parseInt(subredditId),
+        userId: parseInt(userId),
+        reason,
+      },
+    });
+
+    // Remove user from members if currently subscribed
+    await prisma.userOnSubreddit.deleteMany({
+      where: { subredditId: parseInt(subredditId), userId: parseInt(userId) },
+    });
+
+    res.status(200).json({ message: 'User banned successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 }
