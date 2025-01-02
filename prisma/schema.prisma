@@ -14,36 +14,39 @@ datasource db {
 }
 
 model User {
-  id        String      @id @default(uuid()) @db.Uuid
-  email     String      @unique
-  username  String
-  password  String
-  createdAt DateTime    @default(now())
+  id          String      @id @default(uuid()) @db.Uuid
+  email       String      @unique
+  username    String
+  password    String
+  createdAt   DateTime    @default(now())
   profilePictureUrl String?
-  bio       String?
+  bio         String?
 
-  subreddit Subreddit[]
-  members   UserOnSubreddit[]
-  posts     Post[]
-  comments  Comment[]
-  Vote      Vote[]
-  BannedUser BannedUser[]
+  subreddit   Subreddit[]
+  members     UserOnSubreddit[]
+  posts       Post[]
+  comments    Comment[]
+  Vote        Vote[]
+
+  bannedUsers    BannedUser[]    @relation("BannedBy")
+  bansReceived   BannedUser[]   @relation("UserBanned")
 }
 
 model Subreddit {
-  id          String   @id @default(uuid()) @db.Uuid
-  name        String   @unique
-  description String
-  createdAt   DateTime @default(now())
-  creatorId   String
-  bannerUrl   String?  // Optional banner image
-  iconUrl     String?  // Optional icon image
-  rules       Json?    // Rule for the subreddit
+  id            String   @id @default(uuid()) @db.Uuid
+  name          String   @unique
+  description   String
+  createdAt     DateTime @default(now())
+  creatorId     String
+  bannerUrl     String?  // Optional banner image
+  iconUrl       String?  // Optional icon image
+  rules         Json?    // Rule for the subreddit
+  
+  creator       User     @relation(fields: [creatorId], references: [id])
+  posts         Post[]
+  members       UserOnSubreddit[]
 
-  creator     User     @relation(fields: [creatorId], references: [id])
-  posts       Post[]
-  members     UserOnSubreddit[]
-  bannedUsers BannedUser[]
+  BannedUser    BannedUser[]
 }
 
 model Post {
@@ -99,9 +102,11 @@ model BannedUser {
   userId        String
   bannedAt      DateTime  @default(now())
   reason        String?
+  bannedById    String
 
   subreddit     Subreddit @relation(fields: [subredditId], references: [id])
-  user          User      @relation(fields: [userId], references: [id])
+  user          User      @relation("UserBanned", fields: [userId], references: [id]) // Relation to the banned user
+  bannedBy      User      @relation("BannedBy", fields: [bannedById], references: [id]) // Relation to the banning moderator
 
   @@unique([subredditId, userId])
 }
