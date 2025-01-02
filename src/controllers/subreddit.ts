@@ -368,4 +368,31 @@ export async function banUser(req: Request, res: Response) {
     console.error(error);
     res.status(500).json({ error: 'Internal server error' });
   }
-}
+};
+
+// Unban users
+
+export const unbanUser = async (req: Request, res: Response) => {
+  const { subredditId } = req.params;
+  const { userId } = req.body;
+  const moderatorId = req.user.id;
+
+  try {
+    const subreddit = await prisma.subreddit.findFirst({
+      where: { id: parseInt(subredditId), creatorId: moderatorId },
+    });
+
+    if (!subreddit) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+
+    await prisma.bannedUser.deleteMany({
+      where: { subredditId: parseInt(subredditId), userId: parseInt(userId) },
+    });
+
+    res.status(200).json({ message: 'User unbanned successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
