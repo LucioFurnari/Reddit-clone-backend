@@ -1,5 +1,17 @@
 import { Router } from "express";
-import { createSubReddit, getAllSubReddit, getSubReddit, subscribeToSubreddit, unsubscribeFromSubreddit, searchSubreddits, assignModerator, removeModerator, editSubreddit } from "../controllers/subreddit";
+import {
+  createSubReddit,
+  getAllSubReddit,
+  getSubReddit,
+  subscribeToSubreddit,
+  unsubscribeFromSubreddit,
+  searchSubreddits,
+  assignModerator,
+  removeModerator,
+  editSubreddit,
+  banUser,
+  unbanUser
+} from "../controllers/subreddit";
 import { authenticateToken } from "../controllers/auth";
 
 const router = Router();
@@ -30,4 +42,5 @@ router.delete("/subreddits/:subredditId/moderators", authenticateToken, removeMo
 
 // Edit subreddit
 router.put("/subreddits/:subredditId", authenticateToken, editSubreddit);
+
 export default router;
