@@ -331,3 +331,11 @@ export async function removeModerator(req: Request, res: Response) {
     return res.status(500).json({ error: "Internal server error." });
   }
 };
+
+// Ban user for subreddit
+
+export async function banUser(req: Request, res: Response) {
+  const { subredditId } = req.params;
+  const { userId, reason } = req.body;
+  const moderatorId = req.user!.id;
+}
