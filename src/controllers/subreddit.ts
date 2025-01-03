@@ -341,11 +341,15 @@ export async function banUser(req: Request, res: Response) {
 
   try {
     // Check if the requester is a moderator
-    const subreddit = await prisma.subreddit.findFirst({
-      where: { id: subredditId, creatorId: moderatorId },
+    const moderator = await prisma.userOnSubreddit.findFirst({
+      where: { id: moderatorId },
     });
 
-    if (!subreddit) {
+    if (!moderator) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+
+    if (moderator.role !== "MODERATOR") {
       return res.status(403).json({ error: 'Not authorized' });
     }
 
@@ -379,11 +383,16 @@ export const unbanUser = async (req: Request, res: Response) => {
   const moderatorId = req.user!.id;
 
   try {
-    const subreddit = await prisma.subreddit.findFirst({
-      where: { id: subredditId, creatorId: moderatorId },
+    // Check if the requester is a moderator
+    const moderator = await prisma.userOnSubreddit.findFirst({
+      where: { id: moderatorId },
     });
 
-    if (!subreddit) {
+    if (!moderator) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+
+    if (moderator.role !== "MODERATOR") {
       return res.status(403).json({ error: 'Not authorized' });
     }
 
