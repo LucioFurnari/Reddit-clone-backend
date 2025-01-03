@@ -371,7 +371,7 @@ export async function banUser(req: Request, res: Response) {
     res.status(200).json({ message: 'User banned successfully' });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: 'Internal server error' });
   }
 };
 
@@ -403,6 +403,6 @@ export const unbanUser = async (req: Request, res: Response) => {
     res.status(200).json({ message: 'User unbanned successfully' });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: 'Internal server error' });
   }
 };
