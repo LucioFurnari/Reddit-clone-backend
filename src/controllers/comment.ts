@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { z } from "zod";
 import { PrismaClient } from "@prisma/client";
+import { io } from "../app";
 
 const prisma = new PrismaClient();
 
@@ -47,6 +48,13 @@ export async function createComment(req: Request, res: Response) {
         postId: postId,
         parentId: data.parentId || null,
       },
+    });
+
+    // Emit a notification to the post author
+    io.to(`user_${post.authorId}`).emit('notification', {
+      type: 'new_comment',
+      message: `New comment on your post "${post.title}"`,
+      link: `/post/${postId}`,
     });
 
     return res.status(201).json({ message: "Comment created successfully.", comment });
