@@ -27,7 +27,7 @@ app.use('/api', userRoutes);
 const server = createServer(app);
 
 // Initialize Socket.io
-const io = new Server(server, {
+export const io = new Server(server, {
   cors: {
     origin: "*",
     methods: ["GET","POST"],
