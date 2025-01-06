@@ -40,6 +40,9 @@ io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
 
   socket.on('authenticate', (userId) => {
+    if (!userId) {
+      return socket.emit('error', 'User ID is missing');
+    }
     // Store the userId in socket.data
     socket.data.userId = userId;
 
@@ -54,6 +57,7 @@ io.on("connection", (socket) => {
 
   socket.on("disconnect", () => {
     console.log("User disconnected:", socket.id);
+    socket.leave(`user_${socket.data.userId}`);
   });
 });
 
