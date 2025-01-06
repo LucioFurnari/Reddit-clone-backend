@@ -9,6 +9,7 @@ import voteRoutes from './routes/vote';
 import postRoutes from './routes/post';
 import commentRoutes from './routes/comment';
 import userRoutes from './routes/user';
+import jwt from "jsonwebtoken";
 
 dotenv.config();
 
@@ -37,6 +38,13 @@ export const io = new Server(server, {
 // Socket.io connection handling
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
+
+  socket.on('authenticate', (userId) => {
+    // Store the userId in socket.data
+    socket.data.userId = userId;
+
+    console.log(`User authenticated with ID: ${userId}`);
+  });
 
   // Handle custom events here, e.g., joining rooms
   socket.on("join", (userId) => {
