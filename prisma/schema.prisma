@@ -37,7 +37,7 @@ model Subreddit {
   name          String   @unique
   description   String
   createdAt     DateTime @default(now())
-  creatorId     String
+  creatorId     String   @db.Uuid
   bannerUrl     String?  // Optional banner image
   iconUrl       String?  // Optional icon image
   rules         Json?    // Rule for the subreddit
@@ -55,8 +55,8 @@ model Post {
   content     String?   // Optional for post with only images or links
 
   createdAt   DateTime  @default(now())
-  authorId    String
-  subredditId String
+  authorId    String    @db.Uuid
+  subredditId String    @db.Uuid
   karma       Int       @default(0) // Post karma
 
   author      User      @relation(fields: [authorId], references: [id])
@@ -69,10 +69,10 @@ model Comment {
   id          String    @id @default(uuid()) @db.Uuid
   content     String
   createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt // Automatically updates when the record is edited
-  authorId    String
-  postId      String
-  parentId    String?   // For replies to other comments
+  updatedAt   DateTime  @updatedAt  // Automatically updates when the record is edited
+  authorId    String    @db.Uuid
+  postId      String    @db.Uuid
+  parentId    String?   @db.Uuid    // For replies to other comments
   karma       Int       @default(0) // Comment karma
 
   author      User      @relation(fields: [authorId], references: [id])
@@ -85,8 +85,8 @@ model Comment {
 
 model UserOnSubreddit {
   id          String    @id @default(uuid()) @db.Uuid
-  userId      String
-  subredditId String
+  userId      String    @db.Uuid
+  subredditId String    @db.Uuid
   joinedAt    DateTime  @default(now())
   role        String    @default("MEMBER")
 
@@ -98,11 +98,11 @@ model UserOnSubreddit {
 
 model BannedUser {
   id            String    @id @default(uuid()) @db.Uuid
-  subredditId   String
-  userId        String
+  subredditId   String    @db.Uuid
+  userId        String    @db.Uuid
   bannedAt      DateTime  @default(now())
   reason        String?
-  bannedById    String
+  bannedById    String    @db.Uuid
 
   subreddit     Subreddit @relation(fields: [subredditId], references: [id])
   user          User      @relation("UserBanned", fields: [userId], references: [id]) // Relation to the banned user
@@ -113,9 +113,9 @@ model BannedUser {
 
 model Vote {
   id          String   @id @default(uuid()) @db.Uuid
-  userId      String
-  postId      String?
-  commentId   String?
+  userId      String   @db.Uuid
+  postId      String?  @db.Uuid
+  commentId   String?  @db.Uuid
   value       Int
   user        User     @relation(fields: [userId], references: [id])
   post        Post?    @relation(fields: [postId], references: [id])
