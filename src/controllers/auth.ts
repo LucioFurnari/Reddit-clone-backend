@@ -104,7 +104,7 @@ export async function login(req: Request, res: Response) {
     });
 
     // Send success response
-    return res.json({ message: "Logged in successfully", token });
+    return res.status(200).json({ message: "Logged in successfully", token });
   } catch (err) {
     if (err instanceof z.ZodError) {
       return res.status(400).json({ error: err.errors.map((e) => e.message).join(", ")} );
