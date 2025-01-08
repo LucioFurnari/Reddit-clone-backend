@@ -4,16 +4,16 @@ import { app } from "../src/app";
 import { v4 as uuidv4 } from "uuid";
 
 describe("POST /api/signup", () => {
+  beforeEach(() => {
+    prismaMock.user.create.mockReset(); // Reset mocks before each test
+  });
   it("Should create a new user", async () => {
-    beforeEach(() => {
-      prismaMock.user.create.mockReset(); // Reset mocks before each test
-    });
     // Mock prisma create method
     const mockUser = {
       id: 'some-uuid',
-      email: 'bastio74@gmail.com',
-      username: 'Bastio',
-      password: '123',
+      email: 'test@gmail.com',
+      username: 'TestUser',
+      password: 'hashed-password',
       createdAt: new Date(),
       profilePictureUrl: null,
       bio: null,
@@ -25,9 +25,9 @@ describe("POST /api/signup", () => {
     const res = await request(app)
       .post('/api/signup')
       .send({
-        email: 'bastio174@gmail.com',
-        username: 'Bastio',
-        password: 'clave741123',
+        email: 'testUser@gmail.com',
+        username: 'TestUser',
+        password: 'password123',
       });
 
     // Assert the response
