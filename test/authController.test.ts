@@ -38,7 +38,7 @@ describe("POST /api/signup", () => {
 });
 
 describe("POST /api/login", () => {
-  it("Should login a user", async () => {
+  it("Should log in a user with correct credentials", async () => {
     const plainPassword = "password123";
     const hashedPassword = await bcrypt.hash(plainPassword, 10);
 
@@ -64,5 +64,33 @@ describe("POST /api/login", () => {
     // Assert the response
     expect(res.status).toBe(200);
     expect(res.body).toHaveProperty("message", "Logged in successfully");
+  });
+  
+  it("Should return 401 with incorrect credentials", async () => {
+    const plainPassword = "password123";
+    const hashedPassword = await bcrypt.hash(plainPassword, 10);
+
+    // Mock prisma create method
+    const mockUser = {
+      id: 'some-uuid',
+      email: 'bastio74@gmail.com',
+      username: 'Bastio',
+      password:  hashedPassword,
+      createdAt: new Date(),
+      profilePictureUrl: null,
+      bio: null,
+    };
+
+    prismaMock.user.findUnique.mockResolvedValue(mockUser);
+
+    // Make a POST request with incorrect password
+    const res = await request(app).post("/api/login").send({
+      email: "bastio74@gmail.com",
+      password: "wrongpassword"
+    });
+
+    // Assert the response
+    expect(res.status).toBe(401);
+    expect(res.body).toHaveProperty("message", "Invalid credentials");
   });
 });
