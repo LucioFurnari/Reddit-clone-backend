@@ -43,7 +43,7 @@ export async function authenticateToken(req: Request, res: Response, next: NextF
 // Signup validation schema
 const signupSchema = z.object({
   email: z.string().email({ message: 'Invalid email format'}),
-  username: z.string().min(8, { message: 'Username must be at least 8 characters long'}),
+  username: z.string().min(2, { message: 'Username must be at least 8 characters long'}),
   password: z.string().min(8, {message: 'Password must be at least 8 characters long'}),
 });
 
