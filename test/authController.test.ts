@@ -91,6 +91,33 @@ describe("POST /api/login", () => {
 
     // Assert the response
     expect(res.status).toBe(401);
-    expect(res.body).toHaveProperty("message", "Invalid credentials");
+    expect(res.body).toHaveProperty("error", "Invalid credentials");
+  });
+});
+
+describe("POST /api/logout", () => {
+  it("Should clear the token cookie and return a success message", async () => {
+    // Simulate setting a cookie
+    const agent = request.agent(app);
+    agent.jar.setCookie("token=some-token-value");
+
+    // Perform a logout request
+    const res = await agent.post("/api/logout");
+
+    // Assert the response
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveProperty("message", "Logged out");
+    expect(res.headers["set-cookie"]).toBeDefined();
+    expect(res.headers["set-cookie"][0]).toContain("token=;"); // Check that the cookie is cleared
+  });
+
+  
+  it("Should return a 400 if no token is found", async () => {
+    // Perform logout request without setting a token
+    const res = await request(app).post("/api/logout");
+
+    // Assert the response
+    expect(res.status).toBe(400);
+    expect(res.body).toHaveProperty("message", "No token found");
   });
 });
