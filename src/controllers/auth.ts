@@ -4,8 +4,9 @@ import jwt from "jsonwebtoken";
 import { PrismaClient } from "@prisma/client";
 import { z } from "zod";
 import { verifyToken } from "../utils/jwt";
+import prisma from "../prisma";
 
-const prisma = new PrismaClient();
+// const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET || "your_jwt_secret";
 
 declare global {
@@ -117,8 +118,17 @@ export async function login(req: Request, res: Response) {
 
 // Logout controller
 export async function logout(req: Request, res: Response) {
-  res.clearCookie("token");
-  res.json({ message: "Logged out" });
+  const token = req.cookies.token;
+
+  if (!token) {
+    return res.status(400).json({ message: "Not token found" });
+  }
+  res.clearCookie("token", {
+    httpOnly: true,
+    sameSite: "strict",
+  });;
+
+  res.status(200).json({ message: "Logged out" });
 };
 
 // Get user data controller
