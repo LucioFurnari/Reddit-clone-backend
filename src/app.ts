@@ -9,6 +9,7 @@ import voteRoutes from './routes/vote';
 import postRoutes from './routes/post';
 import commentRoutes from './routes/comment';
 import userRoutes from './routes/user';
+import cookieParser from "cookie-parser";
 import jwt from "jsonwebtoken";
 
 dotenv.config();
@@ -16,6 +17,7 @@ dotenv.config();
 export const app = express();
 app.use(cors());
 app.use(express.json());
+app.use(cookieParser());
 
 app.use('/api', authRoutes);
 app.use('/api', subRedditRoutes);
