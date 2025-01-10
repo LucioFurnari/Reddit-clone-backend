@@ -118,15 +118,17 @@ export async function login(req: Request, res: Response) {
 
 // Logout controller
 export async function logout(req: Request, res: Response) {
-  const token = req.cookies.token;
+  const token = req.cookies?.token;
 
   if (!token) {
-    return res.status(400).json({ message: "Not token found" });
+    return res.status(400).json({ message: "No token found" });
   }
+
   res.clearCookie("token", {
     httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
     sameSite: "strict",
-  });;
+  });
 
   res.status(200).json({ message: "Logged out" });
 };
