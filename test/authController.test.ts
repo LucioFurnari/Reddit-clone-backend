@@ -1,8 +1,13 @@
 import request from "supertest";
 import bcrypt from "bcrypt";
 import prismaMock from "./prismaMock";
+import { verifyToken } from "../src/utils/jwt";
 import { app } from "../src/app";
+import jwt from "jsonwebtoken";
+import dotenv from 'dotenv';
 import { v4 as uuidv4 } from "uuid";
+
+dotenv.config();
 
 describe("POST /api/signup", () => {
   beforeEach(() => {
@@ -118,6 +123,41 @@ describe("POST /api/logout", () => {
 
     // Assert the response
     expect(res.status).toBe(400);
+    expect(res.body).toHaveProperty("message", "No token found");
+  });
+});
+
+describe("GET /api/user", () => {
+  it("Should get the user info by id", async () => {
+    // Simulate setting a cookie
+    const agent = request.agent(app);
+    
+
+    const plainPassword = "password123";
+    const hashedPassword = await bcrypt.hash(plainPassword, 10);
+    const JWT_SECRET = process.env.JWT_SECRET || "secret-key"
+
+    // Mock prisma create method
+    const mockUser = {
+      id: 'uuid-id',
+      email: 'bastio74@gmail.com',
+      username: 'Bastio',
+      password:  hashedPassword,
+      createdAt: new Date(),
+      profilePictureUrl: null,
+      bio: null,
+    };
+
+    // Generate JWT token
+    const token = jwt.sign({ userId: mockUser.id }, JWT_SECRET, { expiresIn: "1d" });
+    agent.jar.setCookie(`token=${token}`);
+
+    prismaMock.user.findUnique.mockResolvedValue(mockUser);
+
+    const res = await request(app).get("/api/user");
+
+    // Assert the response
+    expect(res.status).toBe(200);
     expect(res.body).toHaveProperty("message", "No token found");
   });
 });
