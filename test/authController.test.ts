@@ -1,7 +1,6 @@
 import request from "supertest";
 import bcrypt from "bcrypt";
 import prismaMock from "./prismaMock";
-import { verifyToken } from "../src/utils/jwt";
 import { app } from "../src/app";
 import jwt from "jsonwebtoken";
 import dotenv from 'dotenv';
@@ -128,6 +127,9 @@ describe("POST /api/logout", () => {
 });
 
 describe("GET /api/user", () => {
+  beforeEach(() => {
+    prismaMock.user.create.mockReset(); // Reset mocks before each test
+  });
   it("Should get the user info by id", async () => {
     // Simulate setting a cookie
     const agent = request.agent(app);
@@ -156,7 +158,6 @@ describe("GET /api/user", () => {
 
     // Make GET request using agent
     const res = await agent.get("/api/user");
-    
     // Assert the response
     expect(res.status).toBe(200);
   });
