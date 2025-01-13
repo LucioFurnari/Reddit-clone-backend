@@ -132,17 +132,16 @@ describe("GET /api/user", () => {
     // Simulate setting a cookie
     const agent = request.agent(app);
     
-
     const plainPassword = "password123";
     const hashedPassword = await bcrypt.hash(plainPassword, 10);
-    const JWT_SECRET = process.env.JWT_SECRET || "secret-key"
+    const JWT_SECRET = process.env.JWT_SECRET || "secret-key";
 
-    // Mock prisma create method
+    // Mock user data
     const mockUser = {
       id: 'uuid-id',
       email: 'bastio74@gmail.com',
       username: 'Bastio',
-      password:  hashedPassword,
+      password: hashedPassword,
       createdAt: new Date(),
       profilePictureUrl: null,
       bio: null,
@@ -152,12 +151,13 @@ describe("GET /api/user", () => {
     const token = jwt.sign({ userId: mockUser.id }, JWT_SECRET, { expiresIn: "1d" });
     agent.jar.setCookie(`token=${token}`);
 
+    // Mock prisma findUnique method
     prismaMock.user.findUnique.mockResolvedValue(mockUser);
 
-    const res = await request(app).get("/api/user");
-
+    // Make GET request using agent
+    const res = await agent.get("/api/user");
+    
     // Assert the response
     expect(res.status).toBe(200);
-    expect(res.body).toHaveProperty("message", "No token found");
   });
 });
