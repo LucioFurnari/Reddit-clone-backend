@@ -1,9 +1,7 @@
 import { Request, Response } from "express";
 import { z } from "zod";
-import { PrismaClient } from "@prisma/client";
 import { io } from "../app";
-
-const prisma = new PrismaClient();
+import prisma from "../prisma";
 
 // Validation schema for creating comments
 const createCommentsSchema = z.object({
@@ -15,7 +13,7 @@ const createCommentsSchema = z.object({
 export async function createComment(req: Request, res: Response) {
   const { postId } = req.params;
   const userId = req.user!.id;
-
+  console.log("Post id in controller:", postId)
   try {
     // Validate and parse request body
     const data = createCommentsSchema.parse(req.body);
