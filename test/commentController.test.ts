@@ -66,27 +66,27 @@ describe("POST /api/posts/:postId/comments", () => {
 });
 
 describe("GET /api/posts/:postId/comments", () => {
+  const mockPostId = uuidv4(); // Generate a valid UUID for post
+  const mockPost = {
+    id: mockPostId,
+    title: "Post",
+    content: null,
+    createdAt: new Date(),
+    authorId: "author-id",
+    subredditId: "subreddit-id",
+    karma: 0,
+  };
+  const mockComment = [{
+    id: "comment-id",
+    content: "comment-content",
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    authorId: "uuid-id",
+    postId: mockPostId,
+    parentId: null,
+    karma: 1,
+  }];
   it("Should get the comments of a post", async () => {
-    const mockPostId = uuidv4(); // Generate a valid UUID for post
-    const mockPost = {
-      id: mockPostId,
-      title: "Post",
-      content: null,
-      createdAt: new Date(),
-      authorId: "author-id",
-      subredditId: "subreddit-id",
-      karma: 0,
-    };
-    const mockComment = [{
-      id: "comment-id",
-      content: "comment-content",
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      authorId: "uuid-id",
-      postId: mockPostId,
-      parentId: null,
-      karma: 1,
-    }];
 
     prismaMock.post.findUnique.mockResolvedValue(mockPost);
     prismaMock.comment.findMany.mockResolvedValue(mockComment);
@@ -101,8 +101,8 @@ describe("GET /api/posts/:postId/comments", () => {
       expect.objectContaining({
         id: "comment-id",
         content: "comment-content",
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: expect.any(String),
+        updatedAt: expect.any(String),
         authorId: "uuid-id",
         postId: mockPostId,
         parentId: null,
@@ -110,5 +110,13 @@ describe("GET /api/posts/:postId/comments", () => {
       }),
     ])
     );
+  });
+
+  it("Should get a empty comments list", async () => {
+    prismaMock.comment.findMany.mockResolvedValue([]);
+    
+    const res = await request(app).get(`/api/posts/${mockPost.id}/comments`);
+    expect(res.status).toBe(200);
+    expect(res.body.comments).toEqual([]);
   });
 });
