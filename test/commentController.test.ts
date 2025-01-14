@@ -77,7 +77,7 @@ describe("GET /api/posts/:postId/comments", () => {
       subredditId: "subreddit-id",
       karma: 0,
     };
-    const mockComment = {
+    const mockComment = [{
       id: "comment-id",
       content: "comment-content",
       createdAt: new Date(),
@@ -86,14 +86,29 @@ describe("GET /api/posts/:postId/comments", () => {
       postId: mockPostId,
       parentId: null,
       karma: 1,
-    };
+    }];
 
     prismaMock.post.findUnique.mockResolvedValue(mockPost);
-    prismaMock.comment.findUnique.mockResolvedValue(mockComment);
+    prismaMock.comment.findMany.mockResolvedValue(mockComment);
 
     const res = await request(app).get(`/api/posts/${mockPost.id}/comments`);
 
     expect(res.status).toBe(200);
     expect(res.body).toHaveProperty("message", "Comments fetched successfully");
+    expect(res.body).toHaveProperty("comments");
+    expect(res.body.comments).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        id: "comment-id",
+        content: "comment-content",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        authorId: "uuid-id",
+        postId: mockPostId,
+        parentId: null,
+        karma: 1,
+      }),
+    ])
+    );
   });
 });
