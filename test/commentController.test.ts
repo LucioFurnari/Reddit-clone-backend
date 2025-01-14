@@ -3,39 +3,42 @@ import prismaMock from "./prismaMock";
 import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
 import { app } from "../src/app";
+import { v4 as uuidv4 } from "uuid";
 
 dotenv.config();
 
 describe("POST /api/posts/:postId/comments", () => {
   beforeEach(() => {
-    prismaMock.user.create.mockReset(); // Reset mocks before each test
+    prismaMock.post.findUnique.mockReset(); // Reset the findUnique mock
+    prismaMock.comment.create.mockReset();
+    prismaMock.user.findUnique.mockReset();
   });
+
   it("Should create a new comment in a post", async () => {
-    // Simulate setting a cookie
     const agent = request.agent(app);
 
-    // Mock prisma create method
+    const mockPostId = uuidv4(); // Generate a valid UUID for post
     const mockPost = {
-      id: "post-id",
+      id: mockPostId,
       title: "Post",
       content: null,
       createdAt: new Date(),
       authorId: "author-id",
       subredditId: "subreddit-id",
-      karma: 0
+      karma: 0,
     };
 
     const mockComment = {
-      id: "comment-id",
-      content: "comment",
+      id: uuidv4(),
+      content: "new comment",
       createdAt: new Date(),
       updatedAt: new Date(),
-      authorId: "author-id",
-      postId: "post-id",
+      authorId: "uuid-id",
+      postId: mockPostId,
       parentId: null,
       karma: 1,
     };
-    // Mock user data
+
     const mockUser = {
       id: 'uuid-id',
       email: 'bastio74@gmail.com',
@@ -45,19 +48,21 @@ describe("POST /api/posts/:postId/comments", () => {
       profilePictureUrl: null,
       bio: null,
     };
-    
-    // Generate JWT token
+
+    prismaMock.post.findUnique.mockResolvedValue(mockPost); // Mock finding the post
+    prismaMock.comment.create.mockResolvedValue(mockComment);
+    prismaMock.user.findUnique.mockResolvedValue(mockUser);
+
     const JWT_SECRET = process.env.JWT_SECRET || "secret-key";
     const token = jwt.sign({ userId: mockUser.id }, JWT_SECRET, { expiresIn: "1d" });
+
     agent.jar.setCookie(`token=${token}`);
 
-    prismaMock.post.create.mockResolvedValue(mockPost);
-    prismaMock.comment.create.mockResolvedValue(mockComment);
-
-    // Make a post request to create a new comment
-    const res = await request(app).post("/api/posts/:postId/comments")
-    .send({
-      content: "new comment",
-    })
+    const res = await agent.post(`/api/posts/${mockPostId}/comments`)
+      .send({ content: "new comment" });
+    console.log("Response Status:", res.status);
+    console.log("Response Body:", res.body);
+    expect(res.status).toBe(201);
+    expect(res.body).toHaveProperty("message", "Comment created");
   });
-})
+});
