@@ -18,7 +18,7 @@ describe("POST /api/posts/:postId/comments", () => {
 
     const mockPostId = uuidv4(); // Generate a valid UUID for post
     const mockPost = {
-      id: mockPostId,
+      id: "post-id",
       title: "Post",
       content: null,
       createdAt: new Date(),
@@ -62,5 +62,38 @@ describe("POST /api/posts/:postId/comments", () => {
 
     expect(res.status).toBe(201);
     expect(res.body).toHaveProperty("message", "Comment created successfully.");
+  });
+});
+
+describe("GET /api/posts/:postId/comments", () => {
+  it("Should get the comments of a post", async () => {
+    const mockPostId = uuidv4(); // Generate a valid UUID for post
+    const mockPost = {
+      id: mockPostId,
+      title: "Post",
+      content: null,
+      createdAt: new Date(),
+      authorId: "author-id",
+      subredditId: "subreddit-id",
+      karma: 0,
+    };
+    const mockComment = {
+      id: "comment-id",
+      content: "comment-content",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      authorId: "uuid-id",
+      postId: mockPostId,
+      parentId: null,
+      karma: 1,
+    };
+
+    prismaMock.post.findUnique.mockResolvedValue(mockPost);
+    prismaMock.comment.findUnique.mockResolvedValue(mockComment);
+
+    const res = await request(app).get(`/api/posts/${mockPost.id}/comments`);
+
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveProperty("message", "Comments fetched successfully");
   });
 });
