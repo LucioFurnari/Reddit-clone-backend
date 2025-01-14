@@ -1,8 +1,6 @@
 import { query, Request, Response } from "express";
-import { PrismaClient } from "@prisma/client";
+import prisma from "../prisma";
 import { z } from "zod";
-
-const prisma = new PrismaClient();
 
 // Create post validation schema
 const createPostSchema = z.object({
