@@ -1,8 +1,7 @@
 import { Request, Response } from "express";
-import { PrismaClient } from "@prisma/client";
+import prisma from "../prisma";
 import { z } from "zod";
 
-const prisma = new PrismaClient();
 // Validation schema
 const updateUserSchema = z.object({
   bio: z.string().max(300, { message: "Bio cannot exceed 300 characters" }).optional(),
