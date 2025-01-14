@@ -9,11 +9,10 @@ dotenv.config();
 
 describe("POST /api/posts/:postId/comments", () => {
   beforeEach(() => {
-    prismaMock.post.findUnique.mockReset(); // Reset the findUnique mock
+    prismaMock.post.findUnique.mockReset();
     prismaMock.comment.create.mockReset();
     prismaMock.user.findUnique.mockReset();
-  });
-
+  });  
   it("Should create a new comment in a post", async () => {
     const agent = request.agent(app);
 
@@ -58,11 +57,10 @@ describe("POST /api/posts/:postId/comments", () => {
 
     agent.jar.setCookie(`token=${token}`);
 
-    const res = await agent.post(`/api/posts/${mockPostId}/comments`)
+    const res = await agent.post(`/api/posts/${mockPost.id}/comments`)
       .send({ content: "new comment" });
-    console.log("Response Status:", res.status);
-    console.log("Response Body:", res.body);
+
     expect(res.status).toBe(201);
-    expect(res.body).toHaveProperty("message", "Comment created");
+    expect(res.body).toHaveProperty("message", "Comment created successfully.");
   });
 });
