@@ -1,8 +1,6 @@
-import { PrismaClient } from "@prisma/client";
 import { Request, Response } from "express";
+import prisma from "../prisma";
 import { z } from "zod";
-
-const prisma = new PrismaClient();
 
 // Zod schema for subreddit creation
 const createSubRedditSchema = z.object({
