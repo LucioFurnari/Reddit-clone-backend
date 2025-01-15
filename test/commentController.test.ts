@@ -135,3 +135,50 @@ describe("GET /api/posts/:postId/comments", () => {
     expect(res.body).toHaveProperty("message", "Internal server error.");
   });
 });
+
+describe("PUT /api/comments/:commentId", () => {
+  beforeEach(() => {
+    prismaMock.post.findUnique.mockReset();
+    prismaMock.comment.create.mockReset();
+    prismaMock.user.findUnique.mockReset();
+  }); 
+  const mockPostId = uuidv4(); // Generate a valid UUID for post
+  const mockUser = {
+    id: 'uuid-id',
+    email: 'bastio74@gmail.com',
+    username: 'Bastio', // Ensure the username is correct
+    password: "password",
+    createdAt: new Date(),
+    profilePictureUrl: null,
+    bio: null,
+  };
+  const mockComment = {
+    id: uuidv4(),
+    content: "new comment",
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    authorId: mockUser.id,
+    postId: mockPostId,
+    parentId: null,
+    karma: 1,
+  };
+
+  it("Should edit the comment", async () => {
+    const agent = request.agent(app);
+
+    prismaMock.comment.findUnique.mockResolvedValue(mockComment);
+    prismaMock.comment.update.mockResolvedValue(mockComment);
+    prismaMock.user.findUnique.mockResolvedValue(mockUser);
+
+    const JWT_SECRET = process.env.JWT_SECRET || "secret-key";
+    const token = jwt.sign({ userId: mockComment.authorId }, JWT_SECRET, { expiresIn: "1d" });
+
+    agent.jar.setCookie(`token=${token}`);
+
+    const res = await agent.put(`/api/comments/${mockComment.id}`)
+      .send({ content: "edited comment" });
+
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveProperty("message", "Comment updated successfully.");
+  });
+});
