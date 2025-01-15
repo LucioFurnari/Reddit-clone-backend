@@ -13,7 +13,6 @@ const createCommentsSchema = z.object({
 export async function createComment(req: Request, res: Response) {
   const { postId } = req.params;
   const userId = req.user!.id;
-  console.log("Post id in controller:", postId)
   try {
     // Validate and parse request body
     const data = createCommentsSchema.parse(req.body);
@@ -24,7 +23,7 @@ export async function createComment(req: Request, res: Response) {
     });
 
     if (!post) {
-      return res.status(404).json({ error: "Post not found." });
+      return res.status(404).json({ message: "Post not found." });
     };
 
     // If it's a reply, validate the parent comment
@@ -34,7 +33,7 @@ export async function createComment(req: Request, res: Response) {
       });
 
       if (!parentComment || parentComment.postId !== postId) {
-        return  res.status(400).json({ error: "Invalid parent comment or parent comment does not belongs to this post." });
+        return  res.status(400).json({ message: "Invalid parent comment or parent comment does not belongs to this post." });
       };
     };
 
@@ -76,7 +75,7 @@ export async function getComments(req: Request, res: Response) {
     });
 
     if (!post) {
-      return res.status(404).json({ error: "Post not found." });
+      return res.status(404).json({ message: "Post not found." });
     };
 
     // Get comments
@@ -99,7 +98,7 @@ export async function getComments(req: Request, res: Response) {
     return res.status(200).json({ message: "Comments fetched successfully", comments });
   } catch (error) {
     console.error("Error creating comment: ", error);
-    return res.status(500).json({ error: "Internal server error." });
+    return res.status(500).json({ message: "Internal server error." });
   }
 };
 
@@ -119,11 +118,11 @@ export async function editComment(req: Request, res: Response) {
     });
 
     if (!comment) {
-      return res.status(404).json({ error: "Comment not found." });
+      return res.status(404).json({ message: "Comment not found." });
     };
 
     if (comment.authorId === userId) {
-      return res.status(403).json({ error: "You are not authorized to edit this comment." });
+      return res.status(403).json({ message: "You are not authorized to edit this comment." });
     }
 
     // Update the comment
@@ -143,7 +142,7 @@ export async function editComment(req: Request, res: Response) {
       return res.status(400).json({ error: error.errors.map((e) => e.message).join(", ") });
     };
     console.error("Error editing comment: ", error);
-    return res.status(500).json({ error: "Internal server error." });
+    return res.status(500).json({ message: "Internal server error." });
   }
 };
 
@@ -168,7 +167,7 @@ export async function deleteComment(req: Request, res: Response) {
   });
 
   if (!commentWithSubreddit) {
-    return res.status(404).json({ error: "Comment not found." });
+    return res.status(404).json({ message: "Comment not found." });
   }
 
   const { subredditId, authorId } = {
@@ -188,7 +187,7 @@ export async function deleteComment(req: Request, res: Response) {
   });
 
   if (!isAuthor && !isModerator) {
-    return res.status(403).json({ error: "You are not authorized to delete this comment." });
+    return res.status(403).json({ message: "You are not authorized to delete this comment." });
   }
 
   // Delete the comment
@@ -199,6 +198,6 @@ export async function deleteComment(req: Request, res: Response) {
   return res.status(200).json({ message: "Comment deleted successfully." });
   } catch (error) {
     console.error("Error deleting comment:", error);
-    return res.status(500).json({ error: "Internal server error." });
+    return res.status(500).json({ message: "Internal server error." });
   }
 };
