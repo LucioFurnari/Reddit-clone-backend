@@ -119,4 +119,11 @@ describe("GET /api/posts/:postId/comments", () => {
     expect(res.status).toBe(200);
     expect(res.body.comments).toEqual([]);
   });
+
+  it("Should return 404 post not found", async () => {
+    prismaMock.post.findUnique.mockResolvedValue(null);
+    const res = await request(app).get(`/api/posts/${mockPost.id}/comments`)
+    expect(res.status).toBe(404);
+    expect(res.body).toHaveProperty("message", "Post not found");
+  });
 });
