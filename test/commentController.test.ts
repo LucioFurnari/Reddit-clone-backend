@@ -124,6 +124,14 @@ describe("GET /api/posts/:postId/comments", () => {
     prismaMock.post.findUnique.mockResolvedValue(null);
     const res = await request(app).get(`/api/posts/${mockPost.id}/comments`)
     expect(res.status).toBe(404);
-    expect(res.body).toHaveProperty("message", "Post not found");
+    console.log(res.body)
+    expect(res.body).toHaveProperty("message", "Post not found.");
+  });
+
+  it("Should return an unexpected failure", async () => {
+    prismaMock.post.findUnique.mockRejectedValue(new Error("Database error"));
+    const res = await request(app).get(`/api/posts/${mockPostId}/comments`);
+    expect(res.status).toBe(500);
+    expect(res.body).toHaveProperty("message", "Internal server error.");
   });
 });
