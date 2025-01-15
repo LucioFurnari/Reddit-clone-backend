@@ -124,15 +124,21 @@ describe("GET /api/posts/:postId/comments", () => {
     prismaMock.post.findUnique.mockResolvedValue(null);
     const res = await request(app).get(`/api/posts/${mockPost.id}/comments`)
     expect(res.status).toBe(404);
-    console.log(res.body)
     expect(res.body).toHaveProperty("message", "Post not found.");
   });
 
   it("Should return an unexpected failure", async () => {
+      // Mock console.error to suppress error logging
+    const consoleErrorMock = jest.spyOn(console, 'error').mockImplementation(() => {});
+
     prismaMock.post.findUnique.mockRejectedValue(new Error("Database error"));
     const res = await request(app).get(`/api/posts/${mockPostId}/comments`);
+
     expect(res.status).toBe(500);
     expect(res.body).toHaveProperty("message", "Internal server error.");
+
+    // Restore console.error after the test
+    consoleErrorMock.mockRestore();
   });
 });
 
