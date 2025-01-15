@@ -121,7 +121,7 @@ export async function editComment(req: Request, res: Response) {
       return res.status(404).json({ message: "Comment not found." });
     };
 
-    if (comment.authorId === userId) {
+    if (comment.authorId !== userId) {
       return res.status(403).json({ message: "You are not authorized to edit this comment." });
     }
 
