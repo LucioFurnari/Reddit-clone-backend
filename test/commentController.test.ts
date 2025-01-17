@@ -188,3 +188,16 @@ describe("PUT /api/comments/:commentId", () => {
     expect(res.body).toHaveProperty("message", "Comment updated successfully.");
   });
 });
+
+describe("DELETE /api/comments/:commentId", () => {
+  beforeEach(() => {
+    prismaMock.post.findUnique.mockReset();
+    prismaMock.comment.create.mockReset();
+    prismaMock.user.findUnique.mockReset();
+  }); 
+  const mockPostId = uuidv4(); // Generate a valid UUID for post
+  const mockUser = {
+    id: "uuid-id",
+    email: ""
+  };
+});
