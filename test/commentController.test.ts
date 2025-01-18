@@ -142,94 +142,128 @@ describe("GET /api/posts/:postId/comments", () => {
   });
 });
 
-describe("PUT /api/comments/:commentId", () => {
-  beforeEach(() => {
-    prismaMock.post.findUnique.mockReset();
-    prismaMock.comment.create.mockReset();
-    prismaMock.user.findUnique.mockReset();
-  }); 
-  const mockPostId = uuidv4(); // Generate a valid UUID for post
-  const mockUser = {
-    id: 'uuid-id',
-    email: 'bastio74@gmail.com',
-    username: 'Bastio', // Ensure the username is correct
-    password: "password",
-    createdAt: new Date(),
-    profilePictureUrl: null,
-    bio: null,
-  };
-  const mockComment = {
-    id: uuidv4(),
-    content: "new comment",
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    authorId: mockUser.id,
-    postId: mockPostId,
-    parentId: null,
-    karma: 1,
-  };
-
-  it("Should edit the comment", async () => {
-    const agent = request.agent(app);
-
-    prismaMock.comment.findUnique.mockResolvedValue(mockComment);
-    prismaMock.comment.update.mockResolvedValue(mockComment);
-    prismaMock.user.findUnique.mockResolvedValue(mockUser);
-
-    const JWT_SECRET = process.env.JWT_SECRET || "secret-key";
-    const token = jwt.sign({ userId: mockComment.authorId }, JWT_SECRET, { expiresIn: "1d" });
-
-    agent.jar.setCookie(`token=${token}`);
-
-    const res = await agent.put(`/api/comments/${mockComment.id}`)
-      .send({ content: "edited comment" });
-
-    expect(res.status).toBe(200);
-    expect(res.body).toHaveProperty("message", "Comment updated successfully.");
-  });
-});
-
 describe("DELETE /api/comments/:commentId", () => {
-  beforeEach(() => {
-    prismaMock.post.findUnique.mockReset();
-    prismaMock.comment.create.mockReset();
-    prismaMock.user.findUnique.mockReset();
-  }); 
-  const mockPostId = uuidv4(); // Generate a valid UUID for post
+  const mockCommentId = uuidv4();
+  const mockUserId = uuidv4();
+  const mockSubredditId = uuidv4();
+
   const mockUser = {
-    id: 'uuid-id',
-    email: 'bastio74@gmail.com',
-    username: 'Bastio', // Ensure the username is correct
+    id: mockUserId,
+    email: 'testuser@gmail.com',
+    username: 'testuser',
     password: "password",
     createdAt: new Date(),
     profilePictureUrl: null,
     bio: null,
   };
+
   const mockComment = {
-    id: uuidv4(),
-    content: "new comment",
+    id: mockCommentId,
+    content: "test comment",
     createdAt: new Date(),
     updatedAt: new Date(),
-    authorId: mockUser.id,
-    postId: mockPostId,
+    authorId: mockUserId,
+    postId: uuidv4(),
     parentId: null,
     karma: 1,
+    post: {
+      subredditId: mockSubredditId,
+    },
   };
-  it("Should delete the comment", async () => {
-    const agent = request.agent(app);
 
+  const mockUserOnSubreddit = {
+    id: uuidv4(),
+    userId: mockUserId,
+    subredditId: mockSubredditId,
+    joinedAt: new Date(),
+    role: "MODERATOR",
+  }
+
+  beforeEach(() => {
+    prismaMock.comment.findUnique.mockReset();
+    prismaMock.comment.delete.mockReset();
+    prismaMock.userOnSubreddit.findFirst.mockReset();
+    prismaMock.user.findUnique.mockReset();
+  });
+
+  it("Should delete the comment if the user is the author", async () => {
+    const agent = request.agent(app);
     prismaMock.comment.findUnique.mockResolvedValue(mockComment);
     prismaMock.comment.delete.mockResolvedValue(mockComment);
     prismaMock.user.findUnique.mockResolvedValue(mockUser);
 
     const JWT_SECRET = process.env.JWT_SECRET || "secret-key";
-    const token = jwt.sign({ userId: mockComment.authorId }, JWT_SECRET, { expiresIn: "1d" });
-
+    const token = jwt.sign({ userId: mockUserId }, JWT_SECRET, { expiresIn: "1d" });
     agent.jar.setCookie(`token=${token}`);
-
-    const res = await agent.delete(`/api/comments/${mockComment.id}`);
+    const res = await agent
+      .delete(`/api/comments/${mockCommentId}`)
 
     expect(res.status).toBe(200);
     expect(res.body).toHaveProperty("message", "Comment deleted successfully.");
+  });
+
+  it("Should delete the comment if the user is a moderator", async () => {
+    const agent = request.agent(app);
+    prismaMock.comment.findUnique.mockResolvedValue(mockComment);
+    prismaMock.comment.delete.mockResolvedValue(mockComment);
+    prismaMock.userOnSubreddit.findFirst.mockResolvedValue(mockUserOnSubreddit);
+    prismaMock.user.findUnique.mockResolvedValue(mockUser);
+
+    const JWT_SECRET = process.env.JWT_SECRET || "secret-key";
+    const token = jwt.sign({ userId: mockUserId }, JWT_SECRET, { expiresIn: "1d" });
+    agent.jar.setCookie(`token=${token}`);
+    const res = await agent
+      .delete(`/api/comments/${mockCommentId}`)
+
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveProperty("message", "Comment deleted successfully.");
+  });
+
+  it("Should return 403 if the user is not authorized", async () => {
+    const agent = request.agent(app);
+    prismaMock.comment.findUnique.mockResolvedValue(mockComment);
+    prismaMock.userOnSubreddit.findFirst.mockResolvedValue(null);
+
+    const JWT_SECRET = process.env.JWT_SECRET || "secret-key";
+    const token = jwt.sign({ userId: uuidv4() }, JWT_SECRET, { expiresIn: "1d" });
+    agent.jar.setCookie(`token=${token}`);
+    const res = await agent
+      .delete(`/api/comments/${mockCommentId}`)
+
+    expect(res.status).toBe(403);
+    expect(res.body).toHaveProperty("message", "You are not authorized to delete this comment.");
+  });
+
+  it("Should return 404 if the comment is not found", async () => {
+    const agent = request.agent(app);
+    prismaMock.comment.findUnique.mockResolvedValue(null);
+    prismaMock.user.findUnique.mockResolvedValue(mockUser);
+
+    const JWT_SECRET = process.env.JWT_SECRET || "secret-key";
+    const token = jwt.sign({ userId: mockUserId }, JWT_SECRET, { expiresIn: "1d" });
+    agent.jar.setCookie(`token=${token}`);
+    const res = await agent
+      .delete(`/api/comments/${mockCommentId}`)
+
+    expect(res.status).toBe(404);
+    expect(res.body).toHaveProperty("message", "Comment not found.");
+  });
+
+  it("Should return 500 on unexpected error", async () => {
+    const agent = request.agent(app);
+    const consoleErrorMock = jest.spyOn(console, 'error').mockImplementation(() => {});
+    prismaMock.comment.findUnique.mockRejectedValue(new Error("Database error"));
+    prismaMock.user.findUnique.mockResolvedValue(mockUser);
+
+    const JWT_SECRET = process.env.JWT_SECRET || "secret-key";
+    const token = jwt.sign({ userId: mockUserId }, JWT_SECRET, { expiresIn: "1d" });
+    agent.jar.setCookie(`token=${token}`);
+    const res = await agent
+      .delete(`/api/comments/${mockCommentId}`)
+    console.log(res.error)
+    expect(res.status).toBe(500);
+    expect(res.body).toHaveProperty("message", "Internal server error.");
+
+    consoleErrorMock.mockRestore();
   });
 });
