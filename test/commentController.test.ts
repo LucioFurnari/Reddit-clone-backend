@@ -197,7 +197,39 @@ describe("DELETE /api/comments/:commentId", () => {
   }); 
   const mockPostId = uuidv4(); // Generate a valid UUID for post
   const mockUser = {
-    id: "uuid-id",
-    email: ""
+    id: 'uuid-id',
+    email: 'bastio74@gmail.com',
+    username: 'Bastio', // Ensure the username is correct
+    password: "password",
+    createdAt: new Date(),
+    profilePictureUrl: null,
+    bio: null,
   };
+  const mockComment = {
+    id: uuidv4(),
+    content: "new comment",
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    authorId: mockUser.id,
+    postId: mockPostId,
+    parentId: null,
+    karma: 1,
+  };
+  it("Should delete the comment", async () => {
+    const agent = request.agent(app);
+
+    prismaMock.comment.findUnique.mockResolvedValue(mockComment);
+    prismaMock.comment.delete.mockResolvedValue(mockComment);
+    prismaMock.user.findUnique.mockResolvedValue(mockUser);
+
+    const JWT_SECRET = process.env.JWT_SECRET || "secret-key";
+    const token = jwt.sign({ userId: mockComment.authorId }, JWT_SECRET, { expiresIn: "1d" });
+
+    agent.jar.setCookie(`token=${token}`);
+
+    const res = await agent.delete(`/api/comments/${mockComment.id}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveProperty("message", "Comment deleted successfully.");
+  });
 });
