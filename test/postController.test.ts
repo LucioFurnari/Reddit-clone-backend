@@ -98,3 +98,92 @@ describe("POST /api/subreddits/:subredditId/posts", () => {
     consoleErrorMock.mockRestore();
   });
 });
+
+describe("GET /api/subreddits/:subredditId/posts", () => {
+  const mockSubredditId = uuidv4();
+
+  const mockPosts = [
+    {
+      id: uuidv4(),
+      title: "Test Post 1",
+      content: "This is a test post 1",
+      authorId: uuidv4(),
+      subredditId: mockSubredditId,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      karma: 0,
+      author: {
+        id: uuidv4(),
+        username: "testuser1",
+      },
+      subreddit: {
+        id: mockSubredditId,
+        name: "testsubreddit",
+      },
+    },
+    {
+      id: uuidv4(),
+      title: "Test Post 2",
+      content: "This is a test post 2",
+      authorId: uuidv4(),
+      subredditId: mockSubredditId,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      karma: 0,
+      author: {
+        id: uuidv4(),
+        username: "testuser2",
+      },
+      subreddit: {
+        id: mockSubredditId,
+        name: "testsubreddit",
+      },
+    },
+  ];
+
+  beforeEach(() => {
+    prismaMock.post.findMany.mockReset();
+  });
+
+  it("Should fetch posts successfully", async () => {
+    prismaMock.post.findMany.mockResolvedValue(mockPosts);
+
+    const res = await request(app)
+      .get(`/api/subreddits/${mockSubredditId}/posts`);
+
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveProperty("message", "Post fetched successfully");
+
+    // Convert date strings back to Date objects for comparison
+    const receivedPosts = res.body.posts.map((post: any) => ({
+      ...post,
+      createdAt: new Date(post.createdAt),
+      updatedAt: new Date(post.updatedAt),
+    }));
+
+    expect(receivedPosts).toEqual(mockPosts);
+  });
+
+  it("Should return 404 if no posts are found", async () => {
+    prismaMock.post.findMany.mockResolvedValue([]);
+
+    const res = await request(app)
+      .get(`/api/subreddits/${mockSubredditId}/posts`);
+
+    expect(res.status).toBe(404);
+    expect(res.body).toHaveProperty("message", "No posts found for this subreddit.");
+  });
+
+  it("Should return 500 on unexpected error", async () => {
+    const consoleErrorMock = jest.spyOn(console, 'error').mockImplementation(() => {});
+    prismaMock.post.findMany.mockRejectedValue(new Error("Database error"));
+
+    const res = await request(app)
+      .get(`/api/subreddits/${mockSubredditId}/posts`);
+
+    expect(res.status).toBe(500);
+    expect(res.body).toHaveProperty("error", "Internal server error");
+
+    consoleErrorMock.mockRestore();
+  });
+});
