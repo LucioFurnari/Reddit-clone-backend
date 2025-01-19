@@ -275,3 +275,163 @@ describe("GET /api/posts/:postId", () => {
     consoleErrorMock.mockRestore();
   });
 });
+
+describe("PUT /api/posts/:postId", () => {
+  const mockPostId = uuidv4();
+  const mockUserId = uuidv4();
+  const mockSubredditId = uuidv4();
+
+  const mockUser = {
+    id: mockUserId,
+    email: 'testuser@gmail.com',
+    username: 'testuser',
+    password: "password",
+    createdAt: new Date(),
+    profilePictureUrl: null,
+    bio: null,
+  };
+
+  const mockPost = {
+    id: mockPostId,
+    title: "Test Post",
+    content: "This is a test post",
+    authorId: mockUserId,
+    subredditId: mockSubredditId,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    karma: 0,
+    author: {
+      id: mockUserId,
+    },
+    subreddit: {
+      id: mockSubredditId,
+    },
+  };
+
+  beforeEach(() => {
+    prismaMock.post.findUnique.mockReset();
+    prismaMock.post.update.mockReset();
+    prismaMock.userOnSubreddit.findFirst.mockReset();
+  });
+
+  it("Should edit the post successfully if the user is the author", async () => {
+    prismaMock.post.findUnique.mockResolvedValue(mockPost);
+    prismaMock.post.update.mockResolvedValue({
+      ...mockPost,
+      title: "Updated Test Post",
+      content: "This is an updated test post",
+    });
+
+    const JWT_SECRET = process.env.JWT_SECRET || "secret-key";
+    const token = jwt.sign({ userId: mockUserId }, JWT_SECRET, { expiresIn: "1d" });
+
+    const agent = request.agent(app);
+    agent.jar.setCookie(`token=${token}`);
+
+    const res = await agent
+      .put(`/api/posts/${mockPostId}`)
+      .send({ title: "Updated Test Post", content: "This is an updated test post" });
+
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveProperty("message", "Post updated successfully.");
+    expect(res.body.post.title).toBe("Updated Test Post");
+    expect(res.body.post.content).toBe("This is an updated test post");
+  });
+
+  it("Should edit the post successfully if the user is a moderator", async () => {
+    prismaMock.post.findUnique.mockResolvedValue(mockPost);
+    prismaMock.post.update.mockResolvedValue({
+      ...mockPost,
+      title: "Updated Test Post",
+      content: "This is an updated test post",
+    });
+    prismaMock.userOnSubreddit.findFirst.mockResolvedValue({ id: uuidv4(), joinedAt: new Date(), userId: mockUserId, subredditId: mockSubredditId, role: "MODERATOR" });
+
+    const JWT_SECRET = process.env.JWT_SECRET || "secret-key";
+    const token = jwt.sign({ userId: mockUserId }, JWT_SECRET, { expiresIn: "1d" });
+
+    const agent = request.agent(app);
+    agent.jar.setCookie(`token=${token}`);
+
+    const res = await agent
+      .put(`/api/posts/${mockPostId}`)
+      .send({ title: "Updated Test Post", content: "This is an updated test post" });
+
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveProperty("message", "Post updated successfully.");
+    expect(res.body.post.title).toBe("Updated Test Post");
+    expect(res.body.post.content).toBe("This is an updated test post");
+  });
+
+  it("Should return 403 if the user is not authorized", async () => {
+    prismaMock.post.findUnique.mockResolvedValue(mockPost);
+    prismaMock.userOnSubreddit.findFirst.mockResolvedValue(null);
+
+    const JWT_SECRET = process.env.JWT_SECRET || "secret-key";
+    const token = jwt.sign({ userId: uuidv4() }, JWT_SECRET, { expiresIn: "1d" });
+
+    const agent = request.agent(app);
+    agent.jar.setCookie(`token=${token}`);
+
+    const res = await agent
+      .put(`/api/posts/${mockPostId}`)
+      .send({ title: "Updated Test Post", content: "This is an updated test post" });
+
+    expect(res.status).toBe(403);
+    expect(res.body).toHaveProperty("error", "You are not authorized to perform this action.");
+  });
+
+  it("Should return 404 if the post is not found", async () => {
+    prismaMock.post.findUnique.mockResolvedValue(null);
+
+    const JWT_SECRET = process.env.JWT_SECRET || "secret-key";
+    const token = jwt.sign({ userId: mockUserId }, JWT_SECRET, { expiresIn: "1d" });
+
+    const agent = request.agent(app);
+    agent.jar.setCookie(`token=${token}`);
+
+    const res = await agent
+      .put(`/api/posts/${mockPostId}`)
+      .send({ title: "Updated Test Post", content: "This is an updated test post" });
+
+    expect(res.status).toBe(404);
+    expect(res.body).toHaveProperty("error", "Post not found.");
+  });
+
+  it("Should return 400 for invalid request body", async () => {
+    prismaMock.post.findUnique.mockResolvedValue(mockPost);
+
+    const JWT_SECRET = process.env.JWT_SECRET || "secret-key";
+    const token = jwt.sign({ userId: mockUserId }, JWT_SECRET, { expiresIn: "1d" });
+
+    const agent = request.agent(app);
+    agent.jar.setCookie(`token=${token}`);
+
+    const res = await agent
+      .put(`/api/posts/${mockPostId}`)
+      .send({ title: "", content: "" }); // Invalid data
+
+    expect(res.status).toBe(400);
+    expect(res.body).toHaveProperty("error");
+  });
+
+  it("Should return 500 on unexpected error", async () => {
+    const consoleErrorMock = jest.spyOn(console, 'error').mockImplementation(() => {});
+    prismaMock.post.findUnique.mockRejectedValue(new Error("Database error"));
+
+    const JWT_SECRET = process.env.JWT_SECRET || "secret-key";
+    const token = jwt.sign({ userId: mockUserId }, JWT_SECRET, { expiresIn: "1d" });
+
+    const agent = request.agent(app);
+    agent.jar.setCookie(`token=${token}`);
+
+    const res = await agent
+      .put(`/api/posts/${mockPostId}`)
+      .send({ title: "Updated Test Post", content: "This is an updated test post" });
+
+    expect(res.status).toBe(500);
+    expect(res.body).toHaveProperty("error", "Internal server error");
+
+    consoleErrorMock.mockRestore();
+  });
+});
