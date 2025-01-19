@@ -8,10 +8,10 @@ const router = Router();
 router.post("/subreddits/:subredditId/posts", authenticateToken, createPost);
 
 // Get post by id
-router.get("/subreddit/posts/:postId", getPostById);
+router.get("/posts/:postId", getPostById);
 
 // Get all posts by subreddit
-router.get("/subreddit/:subredditId/posts", getSubRedditPosts);
+router.get("/subreddits/:subredditId/posts", getSubRedditPosts);
 
 // Edit post by id
 router.put("/posts/:postId", authenticateToken, editPost);
