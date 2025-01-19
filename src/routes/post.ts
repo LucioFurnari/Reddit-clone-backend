@@ -5,7 +5,7 @@ import { createPost, getPostById, getSubRedditPosts, editPost, deletePost, searc
 const router = Router();
 
 // Create post
-router.post("/subreddit/:subredditId/posts", authenticateToken, createPost);
+router.post("/subreddits/:subredditId/posts", authenticateToken, createPost);
 
 // Get post by id
 router.get("/subreddit/posts/:postId", getPostById);
