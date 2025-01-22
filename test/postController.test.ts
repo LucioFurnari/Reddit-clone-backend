@@ -567,3 +567,88 @@ describe("DELETE /api/posts/:postId", () => {
     consoleErrorMock.mockRestore();
   });
 });
+
+describe("GET /api/posts/search", () => {
+  const mockPosts = [
+    {
+      id: uuidv4(),
+      title: "Test Post 1",
+      content: "This is a test post 1",
+      createdAt: new Date(),
+      authorId: uuidv4(),
+      subredditId: uuidv4(),
+      karma: 0,
+      author: {
+        id: uuidv4(),
+        username: "testuser1",
+      },
+      subreddit: {
+        id: uuidv4(),
+        name: "testsubreddit",
+      },
+    },
+    {
+      id: uuidv4(),
+      title: "Test Post 2",
+      content: "This is a test post 2",
+      createdAt: new Date(),
+      authorId: uuidv4(),
+      subredditId: uuidv4(),
+      karma: 0,
+      author: {
+        id: uuidv4(),
+        username: "testuser2",
+      },
+      subreddit: {
+        id: uuidv4(),
+        name: "testsubreddit",
+      },
+    },
+  ];
+
+  beforeEach(() => {
+    prismaMock.post.findMany.mockReset();
+  });
+
+  it("Should fetch posts successfully based on search query", async () => {
+    prismaMock.post.findMany.mockResolvedValue(mockPosts);
+
+    const res = await request(app)
+      .get(`/api/posts/search`)
+      .query({ query: "test" });
+
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveProperty("message", "Posts fetched successfully.");
+
+    // Convert date strings back to Date objects for comparison
+    const receivedPosts = res.body.posts.map((post: any) => ({
+      ...post,
+      createdAt: new Date(post.createdAt),
+    }));
+
+    expect(receivedPosts).toEqual(mockPosts);
+  });
+
+  it("Should return 400 for invalid query parameter", async () => {
+    const res = await request(app)
+      .get(`/api/posts/search`)
+      .query({ query: "" }); // Invalid query
+
+    expect(res.status).toBe(400);
+    expect(res.body).toHaveProperty("error", "Query parameter is required and cannot be empty.");
+  });
+
+  it("Should return 500 on unexpected error", async () => {
+    const consoleErrorMock = jest.spyOn(console, 'error').mockImplementation(() => {});
+    prismaMock.post.findMany.mockRejectedValue(new Error("Database error"));
+
+    const res = await request(app)
+      .get(`/api/posts/search`)
+      .query({ query: "test" });
+
+    expect(res.status).toBe(500);
+    expect(res.body).toHaveProperty("error", "Internal server error");
+
+    consoleErrorMock.mockRestore();
+  });
+});
