@@ -323,6 +323,7 @@ describe("PUT /api/posts/:postId", () => {
       title: "Updated Test Post",
       content: "This is an updated test post",
     });
+    prismaMock.user.findUnique.mockResolvedValue(mockUser);
 
     const JWT_SECRET = process.env.JWT_SECRET || "secret-key";
     const token = jwt.sign({ userId: mockUserId }, JWT_SECRET, { expiresIn: "1d" });
@@ -582,7 +583,7 @@ describe("DELETE /api/posts/:postId", () => {
       .delete(`/api/posts/${mockPostId}`);
 
     expect(res.status).toBe(500);
-    expect(res.body).toHaveProperty("error", "Internal server error");
+    expect(res.body).toHaveProperty("error", "Internal server error.");
 
     consoleErrorMock.mockRestore();
   });
