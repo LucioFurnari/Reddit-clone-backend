@@ -276,6 +276,8 @@ describe("GET /api/posts/:postId", () => {
   });
 });
 
+// -------------------------------------------- PUT edit post -------------------------------------------- //
+
 describe("PUT /api/posts/:postId", () => {
   const mockPostId = uuidv4();
   const mockUserId = uuidv4();
@@ -430,11 +432,13 @@ describe("PUT /api/posts/:postId", () => {
       .send({ title: "Updated Test Post", content: "This is an updated test post" });
 
     expect(res.status).toBe(500);
-    expect(res.body).toHaveProperty("error", "Internal server error");
+    expect(res.body).toHaveProperty("error", "Internal server error.");
 
     consoleErrorMock.mockRestore();
   });
 });
+
+// -------------------------------------------- DELETE delete post -------------------------------------------- //
 
 describe("DELETE /api/posts/:postId", () => {
   const mockPostId = uuidv4();
@@ -489,7 +493,15 @@ describe("DELETE /api/posts/:postId", () => {
 
     expect(res.status).toBe(200);
     expect(res.body).toHaveProperty("message", "Post deleted successfully.");
-    expect(res.body.post).toEqual(mockPost);
+
+    // Convert date strings back to Date objects for comparison
+    const receivedPosts = res.body.posts.map((post: any) => ({
+      ...post,
+      createdAt: new Date(post.createdAt),
+      updatedAt: new Date(post.updatedAt),
+    }));
+
+    expect(receivedPosts).toEqual(mockPost);
   });
 
   it("Should delete the post successfully if the user is a moderator", async () => {
@@ -512,7 +524,15 @@ describe("DELETE /api/posts/:postId", () => {
 
     expect(res.status).toBe(200);
     expect(res.body).toHaveProperty("message", "Post deleted successfully.");
-    expect(res.body.post).toEqual(mockPost);
+    
+      // Convert date strings back to Date objects for comparison
+      const receivedPosts = res.body.posts.map((post: any) => ({
+        ...post,
+        createdAt: new Date(post.createdAt),
+        updatedAt: new Date(post.updatedAt),
+      }));
+  
+      expect(receivedPosts).toEqual(mockPost);
   });
 
   it("Should return 403 if the user is not authorized", async () => {
@@ -568,6 +588,7 @@ describe("DELETE /api/posts/:postId", () => {
   });
 });
 
+// -------------------------------------------- GET search post -------------------------------------------- //
 describe("GET /api/posts/search", () => {
   const mockPosts = [
     {
