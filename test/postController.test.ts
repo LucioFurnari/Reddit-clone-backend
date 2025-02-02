@@ -293,6 +293,16 @@ describe("PUT /api/posts/:postId", () => {
     bio: null,
   };
 
+  const mockModerator = {
+    id: uuidv4(),
+    email: 'testModerator@gmail.com',
+    username: 'testModerator',
+    password: "password",
+    createdAt: new Date(),
+    profilePictureUrl: null,
+    bio: null,
+  };
+
   const mockPost = {
     id: mockPostId,
     title: "Test Post",
@@ -302,12 +312,6 @@ describe("PUT /api/posts/:postId", () => {
     createdAt: new Date(),
     updatedAt: new Date(),
     karma: 0,
-    author: {
-      id: mockUserId,
-    },
-    subreddit: {
-      id: mockSubredditId,
-    },
   };
 
   beforeEach(() => {
@@ -349,11 +353,11 @@ describe("PUT /api/posts/:postId", () => {
       title: "Updated Test Post",
       content: "This is an updated test post",
     });
-    prismaMock.user.findUnique.mockResolvedValue(mockUser);
-    prismaMock.userOnSubreddit.findFirst.mockResolvedValue({ id: uuidv4(), joinedAt: new Date(), userId: mockUserId, subredditId: mockSubredditId, role: "MODERATOR" });
+    prismaMock.user.findUnique.mockResolvedValue(mockModerator);
+    prismaMock.userOnSubreddit.findFirst.mockResolvedValue({ id: uuidv4(), joinedAt: new Date(), userId: mockModerator.id, subredditId: mockSubredditId, role: "MODERATOR" });
 
     const JWT_SECRET = process.env.JWT_SECRET || "secret-key";
-    const token = jwt.sign({ userId: mockUserId }, JWT_SECRET, { expiresIn: "1d" });
+    const token = jwt.sign({ userId: mockModerator.id }, JWT_SECRET, { expiresIn: "1d" });
 
     const agent = request.agent(app);
     agent.jar.setCookie(`token=${token}`);
@@ -371,7 +375,7 @@ describe("PUT /api/posts/:postId", () => {
   it("Should return 403 if the user is not authorized", async () => {
     prismaMock.post.findUnique.mockResolvedValue(mockPost);
     prismaMock.userOnSubreddit.findFirst.mockResolvedValue(null);
-    prismaMock.user.findUnique.mockResolvedValue(mockUser);
+    prismaMock.user.findUnique.mockResolvedValue(null);
 
     const JWT_SECRET = process.env.JWT_SECRET || "secret-key";
     const token = jwt.sign({ userId: "other-user" }, JWT_SECRET, { expiresIn: "1d" });
