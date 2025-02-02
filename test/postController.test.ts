@@ -314,6 +314,7 @@ describe("PUT /api/posts/:postId", () => {
     prismaMock.post.findUnique.mockReset();
     prismaMock.post.update.mockReset();
     prismaMock.userOnSubreddit.findFirst.mockReset();
+    prismaMock.user.findUnique.mockReset();
   });
 
   it("Should edit the post successfully if the user is the author", async () => {
@@ -348,6 +349,7 @@ describe("PUT /api/posts/:postId", () => {
       title: "Updated Test Post",
       content: "This is an updated test post",
     });
+    prismaMock.user.findUnique.mockResolvedValue(mockUser);
     prismaMock.userOnSubreddit.findFirst.mockResolvedValue({ id: uuidv4(), joinedAt: new Date(), userId: mockUserId, subredditId: mockSubredditId, role: "MODERATOR" });
 
     const JWT_SECRET = process.env.JWT_SECRET || "secret-key";
@@ -369,9 +371,10 @@ describe("PUT /api/posts/:postId", () => {
   it("Should return 403 if the user is not authorized", async () => {
     prismaMock.post.findUnique.mockResolvedValue(mockPost);
     prismaMock.userOnSubreddit.findFirst.mockResolvedValue(null);
+    prismaMock.user.findUnique.mockResolvedValue(mockUser);
 
     const JWT_SECRET = process.env.JWT_SECRET || "secret-key";
-    const token = jwt.sign({ userId: uuidv4() }, JWT_SECRET, { expiresIn: "1d" });
+    const token = jwt.sign({ userId: "other-user" }, JWT_SECRET, { expiresIn: "1d" });
 
     const agent = request.agent(app);
     agent.jar.setCookie(`token=${token}`);
@@ -386,6 +389,7 @@ describe("PUT /api/posts/:postId", () => {
 
   it("Should return 404 if the post is not found", async () => {
     prismaMock.post.findUnique.mockResolvedValue(null);
+    prismaMock.user.findUnique.mockResolvedValue(mockUser);
 
     const JWT_SECRET = process.env.JWT_SECRET || "secret-key";
     const token = jwt.sign({ userId: mockUserId }, JWT_SECRET, { expiresIn: "1d" });
@@ -403,6 +407,7 @@ describe("PUT /api/posts/:postId", () => {
 
   it("Should return 400 for invalid request body", async () => {
     prismaMock.post.findUnique.mockResolvedValue(mockPost);
+    prismaMock.user.findUnique.mockResolvedValue(mockUser);
 
     const JWT_SECRET = process.env.JWT_SECRET || "secret-key";
     const token = jwt.sign({ userId: mockUserId }, JWT_SECRET, { expiresIn: "1d" });
@@ -421,6 +426,7 @@ describe("PUT /api/posts/:postId", () => {
   it("Should return 500 on unexpected error", async () => {
     const consoleErrorMock = jest.spyOn(console, 'error').mockImplementation(() => {});
     prismaMock.post.findUnique.mockRejectedValue(new Error("Database error"));
+    prismaMock.user.findUnique.mockResolvedValue(mockUser);
 
     const JWT_SECRET = process.env.JWT_SECRET || "secret-key";
     const token = jwt.sign({ userId: mockUserId }, JWT_SECRET, { expiresIn: "1d" });
@@ -465,24 +471,22 @@ describe("DELETE /api/posts/:postId", () => {
     createdAt: new Date(),
     updatedAt: new Date(),
     karma: 0,
-    author: {
-      id: mockUserId,
-    },
-    subreddit: {
-      id: mockSubredditId,
-    },
+    author: mockUserId,
+    subreddit: mockSubredditId,
   };
 
   beforeEach(() => {
     prismaMock.post.findUnique.mockReset();
     prismaMock.post.delete.mockReset();
     prismaMock.userOnSubreddit.findFirst.mockReset();
+    prismaMock.user.findUnique.mockReset();
   });
 
   it("Should delete the post successfully if the user is the author", async () => {
     prismaMock.post.findUnique.mockResolvedValue(mockPost);
     prismaMock.post.delete.mockResolvedValue(mockPost);
-
+    prismaMock.user.findUnique.mockResolvedValue(mockUser);
+  
     const JWT_SECRET = process.env.JWT_SECRET || "secret-key";
     const token = jwt.sign({ userId: mockUserId }, JWT_SECRET, { expiresIn: "1d" });
 
