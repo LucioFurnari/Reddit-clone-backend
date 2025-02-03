@@ -179,10 +179,6 @@ export async function deletePost(req: Request, res: Response) {
       return res.status(404).json({ error: "Post not found." });
     };
 
-    console.log('Post:', post);
-    console.log('User ID:', userId);
-    console.log(post.authorId === userId);
-
     // Check if the user is the author or a moderator
     const isAuthor = post.authorId === userId;
     const isModerator = await prisma.userOnSubreddit.findFirst({
