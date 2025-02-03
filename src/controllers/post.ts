@@ -120,10 +120,6 @@ export async function editPost(req: Request, res: Response) {
     // Fetch the post with related data
     const post = await prisma.post.findUnique({
       where: { id: postId },
-      include: {
-        author: { select: { id: true } },
-        subreddit: { select: { id: true } },
-      },
     });
 
     if (!post) {
@@ -131,11 +127,11 @@ export async function editPost(req: Request, res: Response) {
     };
 
     // Check if the user is the author or a moderator
-    const isAuthor = post.author.id === userId;
+    const isAuthor = post.authorId === userId;
     const isModerator = await prisma.userOnSubreddit.findFirst({
       where: {
         userId,
-        subredditId: post.subreddit.id,
+        subredditId: post.subredditId,
         role: "MODERATOR", // Check if is a moderator
       }
     });
@@ -173,22 +169,26 @@ export async function deletePost(req: Request, res: Response) {
     // Fetch the post with related data
     const post = await prisma.post.findUnique({
       where: { id: postId },
-      include: {
-        author: { select: { id: true } },
-        subreddit: { select: { id: true } },
-      },
+      select: {
+        authorId: true,
+        subredditId: true,
+      }
     });
 
     if (!post) {
       return res.status(404).json({ error: "Post not found." });
     };
 
+    console.log('Post:', post);
+    console.log('User ID:', userId);
+    console.log(post.authorId === userId);
+
     // Check if the user is the author or a moderator
-    const isAuthor = post.author.id === userId;
+    const isAuthor = post.authorId === userId;
     const isModerator = await prisma.userOnSubreddit.findFirst({
       where: {
         userId,
-        subredditId: post.subreddit.id,
+        subredditId: post.subredditId,
         role: "MODERATOR", // Check if is a moderator
       }
     });
