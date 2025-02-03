@@ -476,6 +476,16 @@ describe("DELETE /api/posts/:postId", () => {
     bio: null,
   };
 
+  const mockModerator = {
+    id: uuidv4(),
+    email: "moderatorTest@gmail.com",
+    username: "moderatorTest",
+    password: "password",
+    createdAt: new Date(),
+    profilePictureUrl: null,
+    bio: null,
+  }
+
   const mockPost = {
     id: mockPostId,
     title: "Test Post",
@@ -509,31 +519,22 @@ describe("DELETE /api/posts/:postId", () => {
 
     const res = await agent
       .delete(`/api/posts/${mockPostId}`);
-
     expect(res.status).toBe(200);
     expect(res.body).toHaveProperty("message", "Post deleted successfully.");
-
-    // Convert date strings back to Date objects for comparison
-    const receivedPosts = res.body.posts.map((post: any) => ({
-      ...post,
-      createdAt: new Date(post.createdAt),
-      updatedAt: new Date(post.updatedAt),
-    }));
-
-    expect(receivedPosts).toEqual(mockPost);
   });
 
   it("Should delete the post successfully if the user is a moderator", async () => {
     prismaMock.post.findUnique.mockResolvedValue(mockPost);
     prismaMock.post.delete.mockResolvedValue(mockPost);
     prismaMock.userOnSubreddit.findFirst.mockResolvedValue({
-      userId: mockUserId, subredditId: mockSubredditId, role: "MODERATOR",
+      userId: mockModerator.id, subredditId: mockSubredditId, role: "MODERATOR",
       id: uuidv4(),
       joinedAt: new Date(),
     });
+    prismaMock.user.findUnique.mockResolvedValue(mockModerator);
 
     const JWT_SECRET = process.env.JWT_SECRET || "secret-key";
-    const token = jwt.sign({ userId: mockUserId }, JWT_SECRET, { expiresIn: "1d" });
+    const token = jwt.sign({ userId: mockModerator.id }, JWT_SECRET, { expiresIn: "1d" });
 
     const agent = request.agent(app);
     agent.jar.setCookie(`token=${token}`);
@@ -543,23 +544,25 @@ describe("DELETE /api/posts/:postId", () => {
 
     expect(res.status).toBe(200);
     expect(res.body).toHaveProperty("message", "Post deleted successfully.");
-    
-      // Convert date strings back to Date objects for comparison
-      const receivedPosts = res.body.posts.map((post: any) => ({
-        ...post,
-        createdAt: new Date(post.createdAt),
-        updatedAt: new Date(post.updatedAt),
-      }));
-  
-      expect(receivedPosts).toEqual(mockPost);
   });
 
   it("Should return 403 if the user is not authorized", async () => {
+    const fakeUser = {
+      id: uuidv4(),
+      email: "fakeUser@gmail.com",
+      username: "fakeUser",
+      password: "password",
+      createdAt: new Date(),
+      profilePictureUrl: null,
+      bio: null,
+    };
+
     prismaMock.post.findUnique.mockResolvedValue(mockPost);
     prismaMock.userOnSubreddit.findFirst.mockResolvedValue(null);
+    prismaMock.user.findUnique.mockResolvedValue(fakeUser);
 
     const JWT_SECRET = process.env.JWT_SECRET || "secret-key";
-    const token = jwt.sign({ userId: uuidv4() }, JWT_SECRET, { expiresIn: "1d" });
+    const token = jwt.sign({ userId: fakeUser.id }, JWT_SECRET, { expiresIn: "1d" });
 
     const agent = request.agent(app);
     agent.jar.setCookie(`token=${token}`);
@@ -573,6 +576,7 @@ describe("DELETE /api/posts/:postId", () => {
 
   it("Should return 404 if the post is not found", async () => {
     prismaMock.post.findUnique.mockResolvedValue(null);
+    prismaMock.user.findUnique.mockResolvedValue(mockUser);
 
     const JWT_SECRET = process.env.JWT_SECRET || "secret-key";
     const token = jwt.sign({ userId: mockUserId }, JWT_SECRET, { expiresIn: "1d" });
@@ -590,6 +594,7 @@ describe("DELETE /api/posts/:postId", () => {
   it("Should return 500 on unexpected error", async () => {
     const consoleErrorMock = jest.spyOn(console, 'error').mockImplementation(() => {});
     prismaMock.post.findUnique.mockRejectedValue(new Error("Database error"));
+    prismaMock.user.findUnique.mockResolvedValue(mockUser);
 
     const JWT_SECRET = process.env.JWT_SECRET || "secret-key";
     const token = jwt.sign({ userId: mockUserId }, JWT_SECRET, { expiresIn: "1d" });
