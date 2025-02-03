@@ -373,12 +373,22 @@ describe("PUT /api/posts/:postId", () => {
   });
 
   it("Should return 403 if the user is not authorized", async () => {
+    const fakeUser = {
+      id: uuidv4(),
+      email: "fakeUser@gmail.com",
+      username: "fakeUser",
+      password: "password",
+      createdAt: new Date(),
+      profilePictureUrl: null,
+      bio: null,
+    }
+
     prismaMock.post.findUnique.mockResolvedValue(mockPost);
     prismaMock.userOnSubreddit.findFirst.mockResolvedValue(null);
-    prismaMock.user.findUnique.mockResolvedValue(null);
+    prismaMock.user.findUnique.mockResolvedValue(fakeUser);
 
     const JWT_SECRET = process.env.JWT_SECRET || "secret-key";
-    const token = jwt.sign({ userId: "other-user" }, JWT_SECRET, { expiresIn: "1d" });
+    const token = jwt.sign({ userId: fakeUser }, JWT_SECRET, { expiresIn: "1d" });
 
     const agent = request.agent(app);
     agent.jar.setCookie(`token=${token}`);
