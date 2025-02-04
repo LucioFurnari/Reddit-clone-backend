@@ -7,6 +7,9 @@ const router = Router();
 // Create post
 router.post("/subreddits/:subredditId/posts", authenticateToken, createPost);
 
+// Search posts by name
+router.get("/posts/search", searchPosts);
+
 // Get post by id
 router.get("/posts/:postId", getPostById);
 
@@ -18,8 +21,5 @@ router.put("/posts/:postId", authenticateToken, editPost);
 
 // Delete post by id
 router.delete("/posts/:postId", authenticateToken, deletePost);
-
-// Search posts by name
-router.get("/posts/search", searchPosts);
 
 export default router;
