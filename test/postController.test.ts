@@ -613,6 +613,7 @@ describe("DELETE /api/posts/:postId", () => {
 });
 
 // -------------------------------------------- GET search post -------------------------------------------- //
+
 describe("GET /api/posts/search", () => {
   const mockPosts = [
     {
@@ -623,14 +624,6 @@ describe("GET /api/posts/search", () => {
       authorId: uuidv4(),
       subredditId: uuidv4(),
       karma: 0,
-      author: {
-        id: uuidv4(),
-        username: "testuser1",
-      },
-      subreddit: {
-        id: uuidv4(),
-        name: "testsubreddit",
-      },
     },
     {
       id: uuidv4(),
@@ -640,14 +633,6 @@ describe("GET /api/posts/search", () => {
       authorId: uuidv4(),
       subredditId: uuidv4(),
       karma: 0,
-      author: {
-        id: uuidv4(),
-        username: "testuser2",
-      },
-      subreddit: {
-        id: uuidv4(),
-        name: "testsubreddit",
-      },
     },
   ];
 
@@ -676,7 +661,7 @@ describe("GET /api/posts/search", () => {
 
   it("Should return 400 for invalid query parameter", async () => {
     const res = await request(app)
-      .get(`/api/posts/search`)
+      .get("/api/posts/search")
       .query({ query: "" }); // Invalid query
 
     expect(res.status).toBe(400);
@@ -692,7 +677,7 @@ describe("GET /api/posts/search", () => {
       .query({ query: "test" });
 
     expect(res.status).toBe(500);
-    expect(res.body).toHaveProperty("error", "Internal server error");
+    expect(res.body).toHaveProperty("error", "Internal server error.");
 
     consoleErrorMock.mockRestore();
   });
