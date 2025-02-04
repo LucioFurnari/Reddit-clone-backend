@@ -17,19 +17,19 @@ import { authenticateToken } from "../controllers/auth";
 const router = Router();
 
 // Create Subreddit
-router.post("/subreddit", authenticateToken, createSubReddit);
+router.post("/subreddits", authenticateToken, createSubReddit);
 
 // Get all Subreddit
-router.get("/subreddit", getAllSubReddit);
+router.get("/subreddits", getAllSubReddit);
 
 // Get Subreddit by id
-router.get("/subreddit/:subredditId", getSubReddit);
+router.get("/subreddits/:subredditId", getSubReddit);
 
 // Subscribe to a subreddit
-router.post("/subreddit/:subredditId/subscribe", authenticateToken, subscribeToSubreddit);
+router.post("/subreddits/:subredditId/subscribe", authenticateToken, subscribeToSubreddit);
 
 // Unsubscribe from a subreddit
-router.delete("/subreddit/:subredditId/unsubscribe", authenticateToken, unsubscribeFromSubreddit);
+router.delete("/subreddits/:subredditId/unsubscribe", authenticateToken, unsubscribeFromSubreddit);
 
 // Search subreddit by name - use query - example: /subreddits/search?query=example
 router.get("/subreddits/search", searchSubreddits);
