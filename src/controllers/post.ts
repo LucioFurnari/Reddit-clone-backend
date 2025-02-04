@@ -211,9 +211,11 @@ const searchPostsSchema = z.object({
 });
 
 export async function searchPosts(req: Request, res: Response) {
+  console.log('Request query:', req.query);
   try {
     // Validate query parameters
     const { query } = searchPostsSchema.parse(req.query);
+    console.log('Validated query:', query);
 
     const posts = await prisma.post.findMany({
       where: {
@@ -222,19 +224,17 @@ export async function searchPosts(req: Request, res: Response) {
           { content: { contains: query, mode: "insensitive" } },
         ],
       },
-      select: {
-        id: true,
-        title: true,
-        content: true,
-        createdAt: true,
-        author: { select: { id: true, username: true } },
-        subreddit: { select: { id: true, name: true } },
-      },
     });
+    console.log('Fetched posts:', posts);
+
+    if (!posts.length || posts.length === 0) {
+      return res.status(404).json({ message: "No posts found for the search query." });
+    }
 
     return res.status(200).json({ message: "Posts fetched successfully.", posts });
   } catch (error) {
     if (error instanceof z.ZodError) {
+      console.error('Validation error:', error.errors);
       return res.status(400).json({ error: error.errors.map((e) => e.message).join(", ") });
     }
     console.error("Error searching posts:", error);
