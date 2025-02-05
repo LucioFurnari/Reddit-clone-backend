@@ -3,6 +3,8 @@ import prismaMock from './prismaMock';
 import { app } from '../src/app';
 import jwt from 'jsonwebtoken';
 
+const JWT_SECRET = process.env.JWT_SECRET || "secret-key";
+
 const mockUser = {
   id: 'some-uuid',
   email: "userTest@gmail.com",
@@ -36,7 +38,6 @@ describe('POST /api/subreddits', () => {
     prismaMock.subreddit.create.mockResolvedValue(mockSubreddit);
     prismaMock.user.findUnique.mockResolvedValue(mockUser);
 
-    const JWT_SECRET = process.env.JWT_SECRET || "secret-key";
     const token = jwt.sign({ userId: mockUser.id }, JWT_SECRET, { expiresIn: "1d" });
     
     const agent = request.agent(app);
@@ -53,5 +54,24 @@ describe('POST /api/subreddits', () => {
     // Assert the response
     expect(res.status).toBe(201);
     expect(res.body).toHaveProperty('message', 'Subreddit created successfully.');
+  });
+
+  it("Should return 400 if the subreddit's name is missing", async () => {
+    prismaMock.user.findUnique.mockResolvedValue(mockUser);
+
+    const token = jwt.sign({ userId: mockUser.id }, JWT_SECRET, { expiresIn: "1d" });
+    
+    const agent = request.agent(app);
+    agent.jar.setCookie(`token=${token}`);
+
+    // Make a POST request to create a new subreddit
+    const res = await agent
+      .post('/api/subreddits')
+      .send({
+        description: 'This is a test subreddit',
+        name: '',
+      });
+    // Assert the response
+    expect(res.status).toBe(400);
   });
 });
