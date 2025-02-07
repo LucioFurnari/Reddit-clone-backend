@@ -21,12 +21,12 @@ export async function createSubReddit(req: Request, res: Response) {
     });
   
     return res.status(201).json({ message: "Subreddit created successfully.", subreddit });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
+  } catch (err) {
+    if (err instanceof z.ZodError) {
       // Handle validation errors
-      return res.status(400).json({ error: error.errors.map((e) => e.message).join(", ") });
+      return res.status(400).json({ error: err.errors.map((e) => e.message).join(", ") });
     }
-    console.error("Error creating subreddit:", error);
+    console.error("Error creating subreddit:", err);
     return res.status(500).json({ error: "Internal server error." });
   }
 };
