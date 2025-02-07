@@ -4,8 +4,8 @@ import { z } from "zod";
 
 // Zod schema for subreddit creation
 const createSubRedditSchema = z.object({
-  name: z.string().min(3, { message: "Subreddit name must be at least 3 characters." }).max(50),
-  description: z.string().min(10, { message: "Description must be at least 10 characters." }).max(500),
+  name: z.string().trim().min(3, { message: "Subreddit name must be at least 3 characters." }).max(50),
+  description: z.string().trim().min(10, { message: "Description must be at least 10 characters." }).max(500),
 });
 
 // Create a subreddit
