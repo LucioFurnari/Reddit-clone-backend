@@ -10,11 +10,11 @@ const createSubRedditSchema = z.object({
 
 // Create a subreddit
 export async function createSubReddit(req: Request, res: Response) {
-  // Validate input
-  const { name, description } = createSubRedditSchema.parse(req.body);
   const creatorId = req.user!.id;
 
   try{
+     // Validate input
+    const { name, description } = createSubRedditSchema.parse(req.body);
     // Create the subreddit
     const subreddit = await prisma.subreddit.create({
       data: { name, description, creatorId },
