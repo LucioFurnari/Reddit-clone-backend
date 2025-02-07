@@ -69,9 +69,10 @@ describe('POST /api/subreddits', () => {
       .post('/api/subreddits')
       .send({
         description: 'This is a test subreddit',
-        name: '',
+        name: 'ab',
       });
     // Assert the response
     expect(res.status).toBe(400);
+    expect(res.body).toHaveProperty("error", "Subreddit name must be at least 3 characters.");
   });
 });
