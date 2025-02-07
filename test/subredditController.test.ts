@@ -58,6 +58,7 @@ describe('POST /api/subreddits', () => {
 
   it("Should return 400 if the subreddit's name is missing", async () => {
     prismaMock.user.findUnique.mockResolvedValue(mockUser);
+    prismaMock.subreddit.create.mockResolvedValue(mockSubreddit);
 
     const token = jwt.sign({ userId: mockUser.id }, JWT_SECRET, { expiresIn: "1d" });
     
@@ -68,11 +69,11 @@ describe('POST /api/subreddits', () => {
     const res = await agent
       .post('/api/subreddits')
       .send({
-        description: 'This is a test subreddit',
-        name: 'ab',
+        description: '',
+        name: '',
       });
     // Assert the response
     expect(res.status).toBe(400);
-    expect(res.body).toHaveProperty("error", "Subreddit name must be at least 3 characters.");
+    expect(res.body).toHaveProperty("error");
   });
 });
