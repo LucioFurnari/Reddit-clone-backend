@@ -109,4 +109,26 @@ describe('PUT /api/subreddits/:id', () => {
     expect(res.status).toBe(200);
     expect(res.body).toHaveProperty('message', 'Subreddit updated successfully.');
   });
+
+  it("Should return 400 if the subreddit's name is missing", async () => {
+    prismaMock.subreddit.findUnique.mockResolvedValue(mockSubreddit);
+    prismaMock.subreddit.findUnique.mockResolvedValue(mockSubreddit);
+    prismaMock.user.findUnique.mockResolvedValue(mockUser);
+
+    const token = jwt.sign({ userId: mockUser.id }, JWT_SECRET, { expiresIn: "1d" });
+    
+    const agent = request.agent(app);
+    agent.jar.setCookie(`token=${token}`);
+
+    // Make a PUT request to edit a subreddit
+    const res = await agent
+      .put(`/api/subreddits/${mockSubreddit.id}`)
+      .send({
+        description: '',
+        name: '',
+      });
+    // Assert the response
+    expect(res.status).toBe(400);
+    expect(res.body).toHaveProperty("error");
+  });
 });
