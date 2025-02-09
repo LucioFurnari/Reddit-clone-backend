@@ -131,4 +131,25 @@ describe('PUT /api/subreddits/:id', () => {
     expect(res.status).toBe(400);
     expect(res.body).toHaveProperty("error");
   });
+
+  it("Should return 404 if the subreddit doesn't exist", async () => {
+    prismaMock.subreddit.findUnique.mockResolvedValue(null);
+    prismaMock.user.findUnique.mockResolvedValue(mockUser);
+
+    const token = jwt.sign({ userId: mockUser.id }, JWT_SECRET, { expiresIn: "1d" });
+    
+    const agent = request.agent(app);
+    agent.jar.setCookie(`token=${token}`);
+
+    // Make a PUT request to edit a subreddit
+    const res = await agent
+      .put(`/api/subreddits/${mockSubreddit.id}`)
+      .send({
+        name: 'TestSubreddit',
+        description: 'This is a test subreddit',
+      });
+    // Assert the response
+    expect(res.status).toBe(404);
+    expect(res.body).toHaveProperty("error");
+  });
 });
