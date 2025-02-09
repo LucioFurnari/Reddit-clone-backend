@@ -152,4 +152,25 @@ describe('PUT /api/subreddits/:id', () => {
     expect(res.status).toBe(404);
     expect(res.body).toHaveProperty("error");
   });
+
+  it("Should return 403 if the user is not the creator of the subreddit", async () => {
+    prismaMock.subreddit.findUnique.mockResolvedValue(mockSubreddit);
+    prismaMock.user.findUnique.mockResolvedValue({ ...mockUser, id: 'another-uuid' });
+
+    const token = jwt.sign({ userId: 'another-uuid' }, JWT_SECRET, { expiresIn: "1d" });
+    
+    const agent = request.agent(app);
+    agent.jar.setCookie(`token=${token}`);
+
+    // Make a PUT request to edit a subreddit
+    const res = await agent
+      .put(`/api/subreddits/${mockSubreddit.id}`)
+      .send({
+        name: 'TestSubreddit',
+        description: 'This is a test subreddit',
+      });
+    // Assert the response
+    expect(res.status).toBe(403);
+    expect(res.body).toHaveProperty("error");
+  });
 });
