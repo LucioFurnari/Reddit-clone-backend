@@ -33,6 +33,7 @@ export async function createSubReddit(req: Request, res: Response) {
 
 // Define the validation schema using Zod
 const editSubredditSchema = z.object({
+  name: z.string().trim().min(3, { message: "Subreddit name must be at least 3 characters." }).max(50),
   description: z.string().trim().optional(),
   bannerUrl: z.string().url().optional(),
   iconUrl: z.string().url().optional(),
@@ -45,7 +46,7 @@ export async function editSubreddit(req: Request, res: Response) {
 
   try {
     // Validate the request body
-    const data = editSubredditSchema.safeParse(req.body);
+    const { name, description, bannerUrl, iconUrl} = editSubredditSchema.parse(req.body);
 
     // Check if the subreddit exits
     const subreddit = await prisma.subreddit.findUnique({
@@ -65,7 +66,10 @@ export async function editSubreddit(req: Request, res: Response) {
     const updatedSubreddit = await prisma.subreddit.update({
       where: { id: subredditId },
       data: {
-        ...data.data, // Only update fields provided in the request body
+        name,
+        description,
+        bannerUrl,
+        iconUrl,
       },
     });
 
