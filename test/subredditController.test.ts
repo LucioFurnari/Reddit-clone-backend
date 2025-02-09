@@ -77,3 +77,36 @@ describe('POST /api/subreddits', () => {
     expect(res.body).toHaveProperty("error");
   });
 });
+
+// ------------------ Test for editing a subreddit ------------------ //
+
+describe('PUT /api/subreddits/:id', () => {
+  beforeEach(() => {
+    prismaMock.subreddit.update.mockReset(); // Reset mocks before each test
+    prismaMock.subreddit.findUnique.mockReset();
+    prismaMock.user.findUnique.mockReset();
+  });
+
+  it('Should edit a subreddit', async () => {
+    prismaMock.subreddit.update.mockResolvedValue(mockSubreddit);
+    prismaMock.subreddit.findUnique.mockResolvedValue(mockSubreddit);
+    prismaMock.user.findUnique.mockResolvedValue(mockUser);
+
+    const token = jwt.sign({ userId: mockUser.id }, JWT_SECRET, { expiresIn: "1d" });
+    
+    const agent = request.agent(app);
+    agent.jar.setCookie(`token=${token}`);
+
+    // Make a PUT request to edit a subreddit
+    const res = await agent
+      .put(`/api/subreddits/${mockSubreddit.id}`)
+      .send({
+        name: 'TestSubreddit',
+        description: 'This is a test subreddit',
+      });
+
+    // Assert the response
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveProperty('message', 'Subreddit updated successfully.');
+  });
+});
