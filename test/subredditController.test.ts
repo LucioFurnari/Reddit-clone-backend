@@ -174,3 +174,65 @@ describe('PUT /api/subreddits/:id', () => {
     expect(res.body).toHaveProperty("error");
   });
 });
+
+// ------------------ Test for deleting a subreddit ------------------ //
+
+describe('DELETE /api/subreddits/:id', () => {
+  beforeEach(() => {
+    prismaMock.subreddit.delete.mockReset(); // Reset mocks before each test
+    prismaMock.subreddit.findUnique.mockReset();
+    prismaMock.user.findUnique.mockReset();
+  });
+
+  it('Should delete a subreddit', async () => {
+    prismaMock.subreddit.delete.mockResolvedValue(mockSubreddit);
+    prismaMock.subreddit.findUnique.mockResolvedValue(mockSubreddit);
+    prismaMock.user.findUnique.mockResolvedValue(mockUser);
+
+    const token = jwt.sign({ userId: mockUser.id }, JWT_SECRET, { expiresIn: "1d" });
+    
+    const agent = request.agent(app);
+    agent.jar.setCookie(`token=${token}`);
+
+    // Make a DELETE request to delete a subreddit
+    const res = await agent
+      .delete(`/api/subreddits/${mockSubreddit.id}`);
+
+    // Assert the response
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveProperty('message', 'Subreddit deleted successfully.');
+  });
+
+  it("Should return 404 if the subreddit doesn't exist", async () => {
+    prismaMock.subreddit.findUnique.mockResolvedValue(null);
+    prismaMock.user.findUnique.mockResolvedValue(mockUser);
+
+    const token = jwt.sign({ userId: mockUser.id }, JWT_SECRET, { expiresIn: "1d" });
+    
+    const agent = request.agent(app);
+    agent.jar.setCookie(`token=${token}`);
+
+    // Make a DELETE request to delete a subreddit
+    const res = await agent
+      .delete(`/api/subreddits/${mockSubreddit.id}`);
+    // Assert the response
+    expect(res.status).toBe(404);
+    expect(res.body).toHaveProperty("error");
+  });
+
+  it("Should return 403 if the user is not the creator of the subreddit", async () => {
+    prismaMock.subreddit.findUnique.mockResolvedValue(mockSubreddit);
+    prismaMock.user.findUnique.mockResolvedValue({ ...mockUser, id: 'another-uuid' });
+
+    const token = jwt.sign({ userId: 'another-uuid' }, JWT_SECRET, { expiresIn: "1d" });
+    
+    const agent = request.agent(app);
+    agent.jar.setCookie(`token=${token}`);
+
+    // Make a DELETE request to delete a subreddit
+    const res = await agent
+      .delete(`/api/subreddits/${mockSubreddit.id}`);
+    // Assert the response
+    expect(res.status).toBe(403);
+  })
+});
