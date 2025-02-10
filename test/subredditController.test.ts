@@ -13,7 +13,7 @@ const mockUser = {
   createdAt: new Date(),
   profilePictureUrl: null,
   bio: null,
-}
+};
 
 const mockSubreddit = {
   id: 'some-uuid',
@@ -24,7 +24,15 @@ const mockSubreddit = {
   bannerUrl: null,
   iconUrl: null,
   rules: null,
-}
+};
+
+// Helper function to convert date fields to strings
+const convertDatesToString = (obj: any) => {
+  return {
+    ...obj,
+    createdAt: obj.createdAt.toISOString(),
+  };
+};
 
 // ------------------ Test for creating a subreddit ------------------ //
 
@@ -235,4 +243,35 @@ describe('DELETE /api/subreddits/:id', () => {
     // Assert the response
     expect(res.status).toBe(403);
   })
+});
+
+// ------------------ Test for get a subreddit ------------------ //
+
+describe('GET /api/subreddits/:id', () => {
+  beforeEach(() => {
+    prismaMock.subreddit.findUnique.mockReset(); // Reset mocks before each test
+  });
+
+  it('Should get a subreddit', async () => {
+    prismaMock.subreddit.findUnique.mockResolvedValue(mockSubreddit);
+
+    // Make a GET request to get a subreddit
+    const res = await request(app)
+      .get(`/api/subreddits/${mockSubreddit.id}`);
+
+    // Assert the response
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual(convertDatesToString(mockSubreddit));
+  });
+
+  it("Should return 404 if the subreddit doesn't exist", async () => {
+    prismaMock.subreddit.findUnique.mockResolvedValue(null);
+
+    // Make a GET request to get a subreddit
+    const res = await request(app)
+      .get(`/api/subreddits/${mockSubreddit.id}`);
+    // Assert the response
+    expect(res.status).toBe(404);
+    expect(res.body).toHaveProperty("error");
+  });
 });
