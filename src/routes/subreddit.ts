@@ -10,7 +10,8 @@ import {
   removeModerator,
   editSubreddit,
   banUser,
-  unbanUser
+  unbanUser,
+  deleteSubReddit
 } from "../controllers/subreddit";
 import { authenticateToken } from "../controllers/auth";
 
@@ -18,6 +19,9 @@ const router = Router();
 
 // Create Subreddit
 router.post("/subreddits", authenticateToken, createSubReddit);
+
+// Delete Subreddit
+router.delete("/subreddits/:subredditId", authenticateToken, deleteSubReddit);
 
 // Get all Subreddit
 router.get("/subreddits", getAllSubReddit);
