@@ -26,6 +26,14 @@ const mockSubreddit = {
   rules: null,
 };
 
+const mockUserOnSubreddit = {
+  id: 'some-uuid',
+  userId: mockUser.id,
+  subredditId: mockSubreddit.id,
+  joinedAt: new Date(),
+  role: "MEMBER",
+};
+
 // Helper function to convert date fields to strings
 const convertDatesToString = (obj: any) => {
   return {
@@ -273,5 +281,32 @@ describe('GET /api/subreddits/:id', () => {
     // Assert the response
     expect(res.status).toBe(404);
     expect(res.body).toHaveProperty("error");
+  });
+});
+
+// ------------------ Test for subscribe to a subreddit ------------------ //
+
+describe('POST /api/subreddits/:id/subscribe', () => {
+  beforeEach(() => {
+    prismaMock.subreddit.findUnique.mockReset(); // Reset mocks before each test
+    prismaMock.user.findUnique.mockReset();
+  });
+
+  it('Should subscribe to a subreddit', async () => {
+    prismaMock.subreddit.findUnique.mockResolvedValue(mockSubreddit);
+    prismaMock.user.findUnique.mockResolvedValue(mockUser);
+
+    const token = jwt.sign({ userId: mockUser.id }, JWT_SECRET, { expiresIn: "1d" });
+    
+    const agent = request.agent(app);
+    agent.jar.setCookie(`token=${token}`);
+
+    // Make a POST request to subscribe to a subreddit
+    const res = await agent
+      .post(`/api/subreddits/${mockSubreddit.id}/subscribe`);
+
+    // Assert the response
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveProperty('message', 'Subscribed to subreddit successfully.');
   });
 });
