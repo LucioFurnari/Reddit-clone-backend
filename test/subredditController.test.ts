@@ -296,6 +296,8 @@ describe('POST /api/subreddits/:id/subscribe', () => {
 
   it('Should subscribe to a subreddit', async () => {
     prismaMock.subreddit.findUnique.mockResolvedValue(mockSubreddit);
+    prismaMock.userOnSubreddit.findUnique.mockResolvedValue(null);
+    prismaMock.userOnSubreddit.create.mockResolvedValue(mockUserOnSubreddit);
     prismaMock.user.findUnique.mockResolvedValue(mockUser);
 
     const token = jwt.sign({ userId: mockUser.id }, JWT_SECRET, { expiresIn: "1d" });
@@ -308,7 +310,7 @@ describe('POST /api/subreddits/:id/subscribe', () => {
       .post(`/api/subreddits/${mockSubreddit.id}/subscribe`);
 
     // Assert the response
-    expect(res.status).toBe(200);
-    expect(res.body).toHaveProperty('message', 'Subscribed to subreddit successfully.');
+    expect(res.status).toBe(201);
+    expect(res.body).toHaveProperty('message', "Successfully subscribed to subreddit.");
   });
 });
