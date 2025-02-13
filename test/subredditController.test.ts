@@ -288,7 +288,9 @@ describe('GET /api/subreddits/:id', () => {
 
 describe('POST /api/subreddits/:id/subscribe', () => {
   beforeEach(() => {
-    prismaMock.subreddit.findUnique.mockReset(); // Reset mocks before each test
+    prismaMock.subreddit.findUnique.mockReset();
+    prismaMock.userOnSubreddit.create.mockReset();
+    prismaMock.userOnSubreddit.findUnique.mockReset();
     prismaMock.user.findUnique.mockReset();
   });
 
