@@ -313,4 +313,21 @@ describe('POST /api/subreddits/:id/subscribe', () => {
     expect(res.status).toBe(201);
     expect(res.body).toHaveProperty('message', "Successfully subscribed to subreddit.");
   });
+
+  it("Should return 404 if the subreddit doesn't exist", async () => {
+    prismaMock.subreddit.findUnique.mockResolvedValue(null);
+    prismaMock.user.findUnique.mockResolvedValue(mockUser);
+
+    const token = jwt.sign({ userId: mockUser.id }, JWT_SECRET, { expiresIn: "1d" });
+    
+    const agent = request.agent(app);
+    agent.jar.setCookie(`token=${token}`);
+
+    // Make a POST request to subscribe to a subreddit
+    const res = await agent
+      .post(`/api/subreddits/${mockSubreddit.id}/subscribe`);
+    // Assert the response
+    expect(res.status).toBe(404);
+    expect(res.body).toHaveProperty("error");
+  });
 });
