@@ -46,6 +46,14 @@ const mockUserOnSubreddit = {
   role: "MEMBER",
 };
 
+const mockModeratorOnSubreddit = {
+  id: uuidv4(),
+  userId: uuidv4(),
+  subredditId: mockSubreddit.id,
+  joinedAt: new Date(),
+  role: "MODERATOR",
+};
+
 // Helper function to convert date fields to strings
 const convertDatesToString = (obj: any) => {
   return {
@@ -500,6 +508,67 @@ describe('POST /api/subreddits/:id/moderators', () => {
     // Make a POST request to assign a moderator to a subreddit
     const res = await agent
       .post(`/api/subreddits/${mockSubreddit.id}/moderators`)
+      .send({
+        userId: 'some-uuid',
+      });
+    // Assert the response
+    expect(res.status).toBe(404);
+    expect(res.body).toHaveProperty("error");
+  });
+
+  it("Should return 403 if the user is not the creator of the subreddit", async () => {
+    prismaMock.subreddit.findUnique.mockResolvedValue(mockSubreddit);
+    prismaMock.user.findUnique.mockResolvedValue({ ...mockUser, id: 'another-uuid' });
+
+    const token = jwt.sign({ userId: 'another-uuid' }, JWT_SECRET, { expiresIn: "1d" });
+  });
+});
+
+// ------------------ Test for removing a moderator from a subreddit ------------------ //
+
+describe('DELETE /api/subreddits/:id/moderators', () => {
+  beforeEach(() => {
+    prismaMock.subreddit.findUnique.mockReset();
+    prismaMock.userOnSubreddit.findFirst.mockReset();
+    prismaMock.userOnSubreddit.delete.mockReset();
+    prismaMock.user.findUnique.mockReset();
+  });
+
+  it('Should remove a moderator from a subreddit', async () => {
+    prismaMock.subreddit.findUnique.mockResolvedValue(mockSubreddit);
+    prismaMock.userOnSubreddit.findFirst.mockResolvedValue(mockModeratorOnSubreddit);
+    prismaMock.userOnSubreddit.delete.mockResolvedValue(mockModeratorOnSubreddit);
+    prismaMock.user.findUnique.mockResolvedValue(mockUser);
+
+    const token = jwt.sign({ userId: mockUser.id }, JWT_SECRET, { expiresIn: "1d" });
+    
+    const agent = request.agent(app);
+    agent.jar.setCookie(`token=${token}`);
+
+    // Make a DELETE request to remove a moderator from a subreddit
+    const res = await agent
+      .delete(`/api/subreddits/${mockSubreddit.id}/moderators`)
+      .send({
+        userId: mockModeratorOnSubreddit.id,
+      });
+
+    // Assert the response
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveProperty('message', "Successfully removed moderator from subreddit.");
+  });
+
+  it("Should return 404 if the subreddit doesn't exist", async () => {
+    prismaMock.subreddit.findUnique.mockResolvedValue(null);
+    prismaMock.user.findUnique.mockResolvedValue(mockUser);
+
+    const token = jwt.sign({ userId: mockUser.id }, JWT_SECRET, { expiresIn: "1d" });
+    
+    const agent = request.agent(app);
+    agent.jar.setCookie(`token=${token}`);
+
+    // Make a DELETE request to remove a moderator from a subreddit
+    const res = await agent
+      .delete(`/api/subreddits/${mockSubreddit.id}/moderators`)
       .send({
         userId: 'some-uuid',
       });
