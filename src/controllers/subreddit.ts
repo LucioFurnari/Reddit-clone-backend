@@ -249,7 +249,7 @@ export async function searchSubreddits(req: Request, res: Response) {
 
 // Zod schema to validate input
 const assignModeratorSchema = z.object({
-  userId: z.string().uuid({ message: "A valid user ID is required." }),
+  userId: z.string().trim().min(1, { message: "User ID is required." }),
 });
 
 export async function assignModerator(req: Request, res: Response) {
@@ -281,7 +281,7 @@ export async function assignModerator(req: Request, res: Response) {
       update: { role: "MODERATOR" },
     });
 
-    return res.status(200).json({ message: "User assigned as moderator successfully.", userId });
+    return res.status(201).json({ message: "Successfully assigned moderator to subreddit.", userId });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: error.errors.map((e) => e.message).join(", ") });
