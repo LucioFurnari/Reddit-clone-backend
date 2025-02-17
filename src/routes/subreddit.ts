@@ -26,6 +26,9 @@ router.delete("/subreddits/:subredditId", authenticateToken, deleteSubReddit);
 // Get all Subreddit
 router.get("/subreddits", getAllSubReddit);
 
+// Search subreddit by name - use query - example: /subreddits/search?query=example
+router.get("/subreddits/search", searchSubreddits);
+
 // Get Subreddit by id
 router.get("/subreddits/:subredditId", getSubReddit);
 
@@ -34,9 +37,6 @@ router.post("/subreddits/:subredditId/subscribe", authenticateToken, subscribeTo
 
 // Unsubscribe from a subreddit
 router.delete("/subreddits/:subredditId/unsubscribe", authenticateToken, unsubscribeFromSubreddit);
-
-// Search subreddit by name - use query - example: /subreddits/search?query=example
-router.get("/subreddits/search", searchSubreddits);
 
 // Add moderator to subreddit
 router.post("/subreddits/:subredditId/moderators", authenticateToken, assignModerator);
