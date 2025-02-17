@@ -232,13 +232,6 @@ export async function searchSubreddits(req: Request, res: Response) {
       where: {
         name: { contains: query, mode: "insensitive" },
       },
-      select: {
-        id: true,
-        name: true,
-        description: true,
-        iconUrl: true,
-        bannerUrl: true,
-      },
     });
 
     return res.status(200).json({ message: "Subreddits fetched successfully.", subreddits });
