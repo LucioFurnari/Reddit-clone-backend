@@ -350,3 +350,62 @@ describe('POST /api/subreddits/:id/subscribe', () => {
     expect(res.body).toHaveProperty("error");
   });
 });
+
+// ------------------ Test for unsubscribe from a subreddit ------------------ //
+
+describe('DELETE /api/subreddits/:id/unsubscribe', () => {
+  beforeEach(() => {
+    prismaMock.subreddit.findUnique.mockReset();
+    prismaMock.userOnSubreddit.delete.mockReset();
+    prismaMock.userOnSubreddit.findUnique.mockReset();
+    prismaMock.user.findUnique.mockReset();
+  });
+
+  it('Should unsubscribe from a subreddit', async () => {
+    prismaMock.subreddit.findUnique.mockResolvedValue(mockSubreddit);
+    prismaMock.userOnSubreddit.findFirst.mockResolvedValue(mockUserOnSubreddit);
+    prismaMock.userOnSubreddit.delete.mockResolvedValue(mockUserOnSubreddit);
+    prismaMock.user.findUnique.mockResolvedValue(mockUser);
+
+    const token = jwt.sign({ userId: mockUser.id }, JWT_SECRET, { expiresIn: "1d" });
+    
+    const agent = request.agent(app);
+    agent.jar.setCookie(`token=${token}`);
+
+    // Make a DELETE request to unsubscribe from a subreddit
+    const res = await agent
+      .delete(`/api/subreddits/${mockSubreddit.id}/unsubscribe`);
+
+    // Assert the response
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveProperty('message', "Successfully unsubscribed from subreddit.");
+  });
+
+  it("Should return 404 if the subreddit doesn't exist", async () => {
+    prismaMock.subreddit.findUnique.mockResolvedValue(null);
+    prismaMock.user.findUnique.mockResolvedValue(mockUser);
+
+    const token = jwt.sign({ userId: mockUser.id }, JWT_SECRET, { expiresIn: "1d" });
+    
+    const agent = request.agent(app);
+    agent.jar.setCookie(`token=${token}`);
+
+    // Make a DELETE request to unsubscribe from a subreddit
+    const res = await agent
+      .delete(`/api/subreddits/${mockSubreddit.id}/unsubscribe`);
+    // Assert the response
+    expect(res.status).toBe(404);
+    expect(res.body).toHaveProperty("error");
+  });
+
+  it("Should return 403 if the user is not subscribed to the subreddit", async () => {
+    prismaMock.subreddit.findUnique.mockResolvedValue(mockSubreddit);
+    prismaMock.userOnSubreddit.findFirst.mockResolvedValue(null);
+    prismaMock.user.findUnique.mockResolvedValue(mockUser);
+
+    const token = jwt.sign({ userId: mockUser.id }, JWT_SECRET, { expiresIn: "1d" });
+    
+    const agent = request.agent(app);
+    agent.jar.setCookie(`token=${token}`);
+  });
+});
