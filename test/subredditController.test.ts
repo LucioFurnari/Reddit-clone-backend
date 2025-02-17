@@ -333,7 +333,7 @@ describe('POST /api/subreddits/:id/subscribe', () => {
 
   it("Should return 403 if the user is already subscribed to the subreddit", async () => {
     prismaMock.subreddit.findUnique.mockResolvedValue(mockSubreddit);
-    prismaMock.userOnSubreddit.findUnique.mockResolvedValue(mockUserOnSubreddit);
+    prismaMock.userOnSubreddit.findFirst.mockResolvedValue(mockUserOnSubreddit);
     prismaMock.userOnSubreddit.create.mockResolvedValue(mockUserOnSubreddit);
     prismaMock.user.findUnique.mockResolvedValue(mockUser);
 
