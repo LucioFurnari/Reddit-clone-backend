@@ -2,11 +2,12 @@ import request from 'supertest';
 import prismaMock from './prismaMock';
 import { app } from '../src/app';
 import jwt from 'jsonwebtoken';
+import { v4 as uuidv4 } from "uuid";
 
 const JWT_SECRET = process.env.JWT_SECRET || "secret-key";
 
 const mockUser = {
-  id: 'some-uuid',
+  id: uuidv4(),
   email: "userTest@gmail.com",
   username: "UserTest",
   password: "hashed-password",
@@ -16,7 +17,7 @@ const mockUser = {
 };
 
 const mockSubreddit = {
-  id: 'some-uuid',
+  id: uuidv4(),
   name: 'TestSubreddit',
   description: 'This is a test subreddit',
   createdAt: new Date(),
@@ -27,18 +28,18 @@ const mockSubreddit = {
 };
 
 const mockOtherSubreddit = {
-  id: 'other-uuid',
+  id: uuidv4(),
   name: 'testSubreddit2',
   description: 'This is another test subreddit',
   createdAt: new Date(),
-  creatorId: 'another-uuid',
+  creatorId: uuidv4(),
   bannerUrl: null,
   iconUrl: null,
   rules: null,
 }
 
 const mockUserOnSubreddit = {
-  id: 'some-uuid',
+  id: uuidv4(),
   userId: mockUser.id,
   subredditId: mockSubreddit.id,
   joinedAt: new Date(),
@@ -451,5 +452,66 @@ describe('GET /api/subreddits/search', () => {
     // Assert the response
     expect(res.status).toBe(400);
     expect(res.body).toHaveProperty("error");
+  });
+});
+
+// ------------------ Test for assigning a moderator to a subreddit ------------------ //
+
+describe('POST /api/subreddits/:id/moderators', () => {
+  beforeEach(() => {
+    prismaMock.subreddit.findUnique.mockReset();
+    prismaMock.userOnSubreddit.findFirst.mockReset();
+    prismaMock.userOnSubreddit.create.mockReset();
+    prismaMock.user.findUnique.mockReset();
+  });
+
+  it('Should assign a moderator to a subreddit', async () => {
+    prismaMock.subreddit.findUnique.mockResolvedValue(mockSubreddit);
+    prismaMock.userOnSubreddit.findFirst.mockResolvedValue(mockUserOnSubreddit);
+    prismaMock.userOnSubreddit.create.mockResolvedValue(mockUserOnSubreddit);
+    prismaMock.user.findUnique.mockResolvedValue(mockUser);
+
+    const token = jwt.sign({ userId: mockUser.id }, JWT_SECRET, { expiresIn: "1d" });
+    
+    const agent = request.agent(app);
+    agent.jar.setCookie(`token=${token}`);
+
+    // Make a POST request to assign a moderator to a subreddit
+    const res = await agent
+      .post(`/api/subreddits/${mockSubreddit.id}/moderators`)
+      .send({
+        userId: 'some-uuid',
+      });
+
+    // Assert the response
+    expect(res.status).toBe(201);
+    expect(res.body).toHaveProperty('message', "Successfully assigned moderator to subreddit.");
+  });
+
+  it("Should return 404 if the subreddit doesn't exist", async () => {
+    prismaMock.subreddit.findUnique.mockResolvedValue(null);
+    prismaMock.user.findUnique.mockResolvedValue(mockUser);
+
+    const token = jwt.sign({ userId: mockUser.id }, JWT_SECRET, { expiresIn: "1d" });
+    
+    const agent = request.agent(app);
+    agent.jar.setCookie(`token=${token}`);
+
+    // Make a POST request to assign a moderator to a subreddit
+    const res = await agent
+      .post(`/api/subreddits/${mockSubreddit.id}/moderators`)
+      .send({
+        userId: 'some-uuid',
+      });
+    // Assert the response
+    expect(res.status).toBe(404);
+    expect(res.body).toHaveProperty("error");
+  });
+
+  it("Should return 403 if the user is not the creator of the subreddit", async () => {
+    prismaMock.subreddit.findUnique.mockResolvedValue(mockSubreddit);
+    prismaMock.user.findUnique.mockResolvedValue({ ...mockUser, id: 'another-uuid' });
+
+    const token = jwt.sign({ userId: 'another-uuid' }, JWT_SECRET, { expiresIn: "1d" });
   });
 });
