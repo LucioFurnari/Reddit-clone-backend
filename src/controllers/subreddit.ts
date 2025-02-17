@@ -316,8 +316,8 @@ export async function removeModerator(req: Request, res: Response) {
     };
 
     // Remove the moderator role if it exists
-    const userOnSubreddit = await prisma.userOnSubreddit.findUnique({
-      where: { userId_subredditId: { userId, subredditId } },
+    const userOnSubreddit = await prisma.userOnSubreddit.findFirst({
+      where: { userId, subredditId },
     });
 
     if (!userOnSubreddit || userOnSubreddit.role !== "MODERATOR") {
@@ -329,7 +329,7 @@ export async function removeModerator(req: Request, res: Response) {
       where: { userId_subredditId: { userId, subredditId } },
     });
 
-    return res.status(200).json({ message: "Moderator removed successfully.", userId });
+    return res.status(200).json({ message: "Successfully removed moderator from subreddit.", userId });
   } catch (error) {
     console.error("Error removing moderator:", error);
     return res.status(500).json({ error: "Internal server error." });
