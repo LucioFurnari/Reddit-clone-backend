@@ -186,6 +186,15 @@ export async function unsubscribeFromSubreddit(req: Request, res: Response) {
   const userId = req.user!.id;
 
   try {
+    // Check if the subreddit exists
+    const subreddit = await prisma.subreddit.findUnique({
+      where: { id: subredditId },
+    });
+
+    if (!subreddit) {
+      return res.status(404).json({ error: "Subreddit not found." });
+    }
+
     // Check if the subscription exists
     const subscription = await prisma.userOnSubreddit.findFirst({
       where: { userId, subredditId },
