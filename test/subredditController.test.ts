@@ -26,6 +26,17 @@ const mockSubreddit = {
   rules: null,
 };
 
+const mockOtherSubreddit = {
+  id: 'other-uuid',
+  name: 'testSubreddit2',
+  description: 'This is another test subreddit',
+  createdAt: new Date(),
+  creatorId: 'another-uuid',
+  bannerUrl: null,
+  iconUrl: null,
+  rules: null,
+}
+
 const mockUserOnSubreddit = {
   id: 'some-uuid',
   userId: mockUser.id,
@@ -407,5 +418,38 @@ describe('DELETE /api/subreddits/:id/unsubscribe', () => {
     
     const agent = request.agent(app);
     agent.jar.setCookie(`token=${token}`);
+  });
+});
+
+// ------------------ Test for searching subreddits ------------------ //
+
+describe('GET /api/subreddits/search', () => {
+  beforeEach(() => {
+    prismaMock.subreddit.findMany.mockReset(); // Reset mocks before each test
+  });
+
+  it('Should search subreddits', async () => {
+    prismaMock.subreddit.findMany.mockResolvedValue([mockSubreddit, mockOtherSubreddit]);
+
+    // Make a GET request to search subreddits
+    const res = await request(app)
+      .get('/api/subreddits/search?query=test');
+
+    // Assert the response
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveProperty('subreddits');
+    expect(res.body.subreddits).toHaveLength(2);
+    expect(res.body.subreddits[0]).toEqual(convertDatesToString(mockSubreddit));
+    expect(res.body.subreddits[1]).toEqual(convertDatesToString(mockOtherSubreddit));
+  });
+
+  it('Should return 400 if the query is missing', async () => {
+    // Make a GET request to search subreddits
+    const res = await request(app)
+      .get('/api/subreddits/search');
+
+    // Assert the response
+    expect(res.status).toBe(400);
+    expect(res.body).toHaveProperty("error");
   });
 });
