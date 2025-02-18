@@ -341,20 +341,23 @@ export async function removeModerator(req: Request, res: Response) {
 export async function banUser(req: Request, res: Response) {
   const { subredditId } = req.params;
   const { userId, reason } = req.body;
-  const moderatorId = req.user!.id;
+  const requestingUserId = req.user!.id;
 
   try {
-    // Check if the requester is a moderator
-    const moderator = await prisma.userOnSubreddit.findFirst({
-      where: { id: moderatorId },
+    const subreddit = await prisma.subreddit.findUnique({
+      where: { id: subredditId },
     });
 
-    if (!moderator) {
-      return res.status(403).json({ error: 'Not authorized' });
-    }
+    if (!subreddit) {
+      return res.status(404).json({ error: "Subreddit not found." });
+    };
 
-    if (moderator.role !== "MODERATOR") {
-      return res.status(403).json({ error: 'Not authorized' });
+    const userOnSubreddit = await prisma.userOnSubreddit.findFirst({
+      where: { userId: requestingUserId, subredditId },
+    });
+
+    if (subreddit?.creatorId != requestingUserId || !userOnSubreddit || userOnSubreddit.role != "MODERATOR") {
+      return res.status(403).json({ error: "You are not authorized to ban users from this subreddit." });
     }
 
     // Add user to banned list
@@ -362,7 +365,7 @@ export async function banUser(req: Request, res: Response) {
       data: {
         subredditId: subredditId,
         userId: userId,
-        bannedById: moderatorId,
+        bannedById: userId,
         reason,
       },
     });
