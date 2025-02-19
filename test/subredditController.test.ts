@@ -700,3 +700,76 @@ describe('POST /api/subreddits/:id/ban', () => {
     expect(res.body).toHaveProperty("error");
   });
 });
+
+// ------------------ Test for unbanning a user from a subreddit ------------------ //
+
+describe('POST /api/subreddits/:id/unban', () => {
+  beforeEach(() => {
+    prismaMock.subreddit.findUnique.mockReset();
+    prismaMock.bannedUser.findFirst.mockReset();
+    prismaMock.bannedUser.delete.mockReset();
+    prismaMock.user.findUnique.mockReset();
+  });
+
+  it('Should unban a user from a subreddit', async () => {
+    prismaMock.subreddit.findUnique.mockResolvedValue(mockSubreddit);
+    prismaMock.bannedUser.findFirst.mockResolvedValue(mockBannedUser);
+    prismaMock.bannedUser.delete.mockResolvedValue(mockBannedUser);
+    prismaMock.user.findUnique.mockResolvedValue(mockUser);
+
+    const token = jwt.sign({ userId: mockUser.id }, JWT_SECRET, { expiresIn: "1d" });
+
+    const agent = request.agent(app);
+    agent.jar.setCookie(`token=${token}`);
+
+    // Make a POST request to unban a user from a subreddit
+    const res = await agent
+      .post(`/api/subreddits/${mockSubreddit.id}/unban`)
+      .send({
+        userId: mockBannedUser.userId,
+      });
+
+    // Assert the response
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveProperty('message', "Successfully unbanned user from subreddit.");
+  });
+
+  it("Should return 404 if the subreddit doesn't exist", async () => {
+    prismaMock.subreddit.findUnique.mockResolvedValue(null);
+    prismaMock.user.findUnique.mockResolvedValue(mockUser);
+
+    const token = jwt.sign({ userId: mockUser.id }, JWT_SECRET, { expiresIn: "1d" });
+
+    const agent = request.agent(app);
+    agent.jar.setCookie(`token=${token}`);
+
+    // Make a POST request to unban a user from a subreddit
+    const res = await agent
+      .post(`/api/subreddits/${mockSubreddit.id}/unban`)
+      .send({
+        userId: 'some-uuid',
+      });
+    // Assert the response
+    expect(res.status).toBe(404);
+    expect(res.body).toHaveProperty("error");
+  });
+
+  it("Should return 403 if the user is not a moderator of the subreddit", async () => {
+    prismaMock.subreddit.findUnique.mockResolvedValue(mockSubreddit);
+    prismaMock.bannedUser.findFirst.mockResolvedValue(mockBannedUser);
+    prismaMock.user.findUnique.mockResolvedValue(mockOtherUser);
+
+    const token = jwt.sign({ userId: mockOtherUser.id }, JWT_SECRET, { expiresIn: "1d" });
+
+    const agent = request.agent(app);
+    agent.jar.setCookie(`token=${token}`);
+
+    // Make a POST request to unban a user from a subreddit
+    const res = await agent
+      .post(`/api/subreddits/${mockSubreddit.id}/unban`)
+      .send({ userId: uuidv4() });
+    // Assert the response
+    expect(res.status).toBe(403);
+    expect(res.body).toHaveProperty("error");
+  });
+});
