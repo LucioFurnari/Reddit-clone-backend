@@ -402,7 +402,7 @@ export const unbanUser = async (req: Request, res: Response) => {
       where: { userId: requestingUserId, subredditId },
     });
 
-    if (subreddit?.creatorId != requestingUserId || !userOnSubreddit || userOnSubreddit.role != "MODERATOR") {
+    if (subreddit?.creatorId != requestingUserId && (!userOnSubreddit || userOnSubreddit.role != "MODERATOR")) {
       return res.status(403).json({ error: "You are not authorized to ban users from this subreddit." });
     }
 
@@ -419,7 +419,7 @@ export const unbanUser = async (req: Request, res: Response) => {
       },
     }); 
 
-    res.status(200).json({ message: 'User unbanned successfully' });
+    res.status(200).json({ message: "Successfully unbanned user from subreddit." });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: 'Internal server error' });
