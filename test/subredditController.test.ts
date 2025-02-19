@@ -16,6 +16,16 @@ const mockUser = {
   bio: null,
 };
 
+const mockOtherUser = {
+  id: uuidv4(),
+  email: 'testuser@gmail.com',
+  username: 'testuser',
+  password: 'password',
+  createdAt: new Date(),
+  profilePictureUrl: null,
+  bio: null,
+}
+
 const mockSubreddit = {
   id: uuidv4(),
   name: 'TestSubreddit',
@@ -46,12 +56,29 @@ const mockUserOnSubreddit = {
   role: "MEMBER",
 };
 
+const mockUserOnSubreddit2 = {
+  id: uuidv4(),
+  userId: mockOtherUser.id,
+  subredditId: mockSubreddit.id,
+  joinedAt: new Date(),
+  role: "MEMBER",
+};
+
 const mockModeratorOnSubreddit = {
   id: uuidv4(),
   userId: uuidv4(),
   subredditId: mockSubreddit.id,
   joinedAt: new Date(),
   role: "MODERATOR",
+};
+
+const mockBannedUser = {
+  id: uuidv4(),
+  userId: uuidv4(),
+  subredditId: mockSubreddit.id,
+  bannedAt: new Date(),
+  reason: "spam",
+  bannedById: mockUser.id,
 };
 
 // Helper function to convert date fields to strings
@@ -592,6 +619,82 @@ describe('DELETE /api/subreddits/:id/moderators', () => {
       .send({
         userId: mockUser.id,
       });
+    // Assert the response
+    expect(res.status).toBe(403);
+    expect(res.body).toHaveProperty("error");
+  });
+});
+
+// ------------------ Test for banning a user from a subreddit ------------------ //
+
+describe('POST /api/subreddits/:id/ban', () => {
+  beforeEach(() => {
+    prismaMock.subreddit.findUnique.mockReset();
+    prismaMock.userOnSubreddit.findFirst.mockReset();
+    prismaMock.userOnSubreddit.deleteMany.mockReset();
+    prismaMock.user.findUnique.mockReset();
+    prismaMock.bannedUser.create.mockReset();
+  });
+
+  it('Should ban a user from a subreddit', async () => {
+    prismaMock.subreddit.findUnique.mockResolvedValue(mockSubreddit);
+    prismaMock.userOnSubreddit.findFirst.mockResolvedValue(mockUserOnSubreddit);
+    prismaMock.userOnSubreddit.deleteMany.mockResolvedValue({ count: 1 });
+    prismaMock.user.findUnique.mockResolvedValue(mockUser);
+    prismaMock.bannedUser.create.mockResolvedValue(mockBannedUser);
+
+    const token = jwt.sign({ userId: mockUser.id }, JWT_SECRET, { expiresIn: "1d" });
+
+    const agent = request.agent(app);
+    agent.jar.setCookie(`token=${token}`);
+
+    // Make a POST request to ban a user from a subreddit
+    const res = await agent
+      .post(`/api/subreddits/${mockSubreddit.id}/ban`)
+      .send({
+        userId: mockBannedUser.id,
+        reason: mockBannedUser.reason,
+      });
+
+    // Assert the response
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveProperty('message', "Successfully banned user from subreddit.");
+  });
+
+  it("Should return 404 if the subreddit doesn't exist", async () => {
+    prismaMock.subreddit.findUnique.mockResolvedValue(null);
+    prismaMock.user.findUnique.mockResolvedValue(mockUser);
+
+    const token = jwt.sign({ userId: mockUser.id }, JWT_SECRET, { expiresIn: "1d" });
+
+    const agent = request.agent(app);
+    agent.jar.setCookie(`token=${token}`);
+
+    // Make a POST request to ban a user from a subreddit
+    const res = await agent
+      .post(`/api/subreddits/${mockSubreddit.id}/ban`)
+      .send({
+        userId: 'some-uuid',
+      });
+    // Assert the response
+    expect(res.status).toBe(404);
+    expect(res.body).toHaveProperty("error");
+  });
+
+  it("Should return 403 if the user is not a moderator of the subreddit", async () => {
+    prismaMock.subreddit.findUnique.mockResolvedValue(mockSubreddit);
+    prismaMock.userOnSubreddit.findFirst.mockResolvedValue(null);
+    prismaMock.user.findUnique.mockResolvedValue(mockOtherUser);
+
+    const token = jwt.sign({ userId: mockOtherUser.id }, JWT_SECRET, { expiresIn: "1d" });
+
+    const agent = request.agent(app);
+    agent.jar.setCookie(`token=${token}`);
+
+    // Make a POST request to ban a user from a subreddit
+    const res = await agent
+      .post(`/api/subreddits/${mockSubreddit.id}/ban`)
+      .send({ userId: uuidv4() });
     // Assert the response
     expect(res.status).toBe(403);
     expect(res.body).toHaveProperty("error");
