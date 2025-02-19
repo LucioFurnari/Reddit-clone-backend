@@ -582,5 +582,18 @@ describe('DELETE /api/subreddits/:id/moderators', () => {
     prismaMock.user.findUnique.mockResolvedValue({ ...mockUser, id: 'another-uuid' });
 
     const token = jwt.sign({ userId: 'another-uuid' }, JWT_SECRET, { expiresIn: "1d" });
+
+    const agent = request.agent(app);
+    agent.jar.setCookie(`token=${token}`);
+
+    // Make a DELETE request to remove a moderator from a subreddit
+    const res = await agent
+      .delete(`/api/subreddits/${mockSubreddit.id}/moderators`)
+      .send({
+        userId: mockUser.id,
+      });
+    // Assert the response
+    expect(res.status).toBe(403);
+    expect(res.body).toHaveProperty("error");
   });
 });
