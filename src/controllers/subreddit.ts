@@ -387,25 +387,37 @@ export async function banUser(req: Request, res: Response) {
 export const unbanUser = async (req: Request, res: Response) => {
   const { subredditId } = req.params;
   const { userId } = req.body;
-  const moderatorId = req.user!.id;
+  const requestingUserId = req.user!.id;
 
   try {
-    // Check if the requester is a moderator
-    const moderator = await prisma.userOnSubreddit.findFirst({
-      where: { id: moderatorId },
+    const subreddit = await prisma.subreddit.findUnique({
+      where: { id: subredditId },
     });
 
-    if (!moderator) {
-      return res.status(403).json({ error: 'Not authorized' });
-    }
+    if (!subreddit) {
+      return res.status(404).json({ error: "Subreddit not found." });
+    };
 
-    if (moderator.role !== "MODERATOR") {
-      return res.status(403).json({ error: 'Not authorized' });
+    const userOnSubreddit = await prisma.userOnSubreddit.findFirst({
+      where: { userId: requestingUserId, subredditId },
+    });
+
+    if (subreddit?.creatorId != requestingUserId || !userOnSubreddit || userOnSubreddit.role != "MODERATOR") {
+      return res.status(403).json({ error: "You are not authorized to ban users from this subreddit." });
     }
 
     await prisma.bannedUser.deleteMany({
       where: { subredditId: subredditId, userId: userId },
     });
+
+    // Add user back to members
+    await prisma.userOnSubreddit.create({
+      data: {
+        subredditId: subredditId,
+        userId: userId,
+        role: "MEMBER",
+      },
+    }); 
 
     res.status(200).json({ message: 'User unbanned successfully' });
   } catch (error) {
