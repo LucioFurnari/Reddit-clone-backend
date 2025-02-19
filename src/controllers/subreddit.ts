@@ -356,7 +356,7 @@ export async function banUser(req: Request, res: Response) {
       where: { userId: requestingUserId, subredditId },
     });
 
-    if (subreddit?.creatorId != requestingUserId || !userOnSubreddit || userOnSubreddit.role != "MODERATOR") {
+    if (subreddit?.creatorId != requestingUserId && (!userOnSubreddit || userOnSubreddit.role != "MODERATOR")) {
       return res.status(403).json({ error: "You are not authorized to ban users from this subreddit." });
     }
 
@@ -375,7 +375,7 @@ export async function banUser(req: Request, res: Response) {
       where: { subredditId: subredditId, userId: userId },
     });
 
-    res.status(200).json({ message: 'User banned successfully' });
+    res.status(200).json({ message: "Successfully banned user from subreddit." });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: 'Internal server error' });
