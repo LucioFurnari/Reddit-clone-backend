@@ -14,6 +14,26 @@ const mockUser = {
   bio: null,
 };
 
+const mockSubreddit = {
+  id: uuidv4(),
+  name: 'TestSubreddit',
+  description: 'This is a test subreddit',
+  createdAt: new Date(),
+  creatorId: mockUser.id,
+  bannerUrl: null,
+  iconUrl: null,
+  rules: null,
+};
+
+const mockUserOnSubreddit = {
+  id: uuidv4(),
+  userId: mockUser.id,
+  subredditId: mockSubreddit.id,
+  joinedAt: new Date(),
+  role: "MEMBER",
+  subreddit: mockSubreddit,
+};
+
 // Helper function to convert date fields to strings
 const convertDatesToString = (obj: any) => {
   return {
@@ -49,5 +69,32 @@ describe("PUT /profile", () => {
       message: "Profile updated successfully",
       user: convertDatesToString(mockUser),
     });
+  });
+});
+
+// -------------- Test for getSubscribedSubreddits -------------- //
+
+describe("GET /subscribed-subreddits", () => {
+  beforeEach(() => {
+    prismaMock.userOnSubreddit.findMany.mockReset();
+  });
+
+  it("Should get the subscribed subreddits", async () => {
+    prismaMock.user.findUnique.mockResolvedValue(mockUser);
+    prismaMock.userOnSubreddit.findMany.mockResolvedValue([mockUserOnSubreddit]);
+    prismaMock.subreddit.findUnique.mockResolvedValue(mockSubreddit);
+
+    const token = jwt.sign({ id: mockUser.id }, process.env.JWT_SECRET!);
+
+    const agent = request.agent(app);
+    agent.jar.setCookie(`token=${token}`);
+
+    const res = await agent
+      .get("/api/subscribed-subreddits")
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveProperty("subreddits")
+    expect(res.body.subreddits).toEqual([convertDatesToString(mockSubreddit)]);
   });
 });
