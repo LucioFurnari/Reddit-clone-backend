@@ -54,23 +54,14 @@ export async function getSubscribedSubreddits(req: Request, res: Response) {
     // Fetch subscribed subreddits for the user
     const subscribedSubreddits = await prisma.userOnSubreddit.findMany({
       where: { userId },
-      include: {
-        subreddit: {
-          select: {
-            id: true,
-            name: true,
-            description: true,
-            iconUrl: true,
-            bannerUrl: true,
-          },
-        },
-      },
+      include: { subreddit: true },
       take: limit,
       skip: offset,
     });
 
+    console.log(subscribedSubreddits);
     if (subscribedSubreddits.length === 0) {
-      return res.status(200).json({ message: "You are not subscribed to any subreddits.", subreddits: [] });
+      return res.status(404).json({ error: "No subscribed subreddits found.", subreddits: [] });
     };
 
     // Extract subreddit details from the subscription data
