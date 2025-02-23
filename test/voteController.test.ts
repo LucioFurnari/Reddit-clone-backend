@@ -3,7 +3,6 @@ import prismaMock from './prismaMock';
 import { app } from '../src/app';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from "uuid";
-import exp from 'constants';
 
 const JWT_SECRET = process.env.JWT_SECRET || "secret-key";
 
