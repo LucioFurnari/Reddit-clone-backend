@@ -43,6 +43,7 @@ const mockVotePost = {
   id: uuidv4(),
   userId: mockUser.id,
   postId: uuidv4(),
+  commentId: null,
   value: 1,
 };
 
@@ -64,7 +65,7 @@ describe("PATCH /vote", () => {
     prismaMock.user.findUnique.mockReset();
   });
 
-  it("should vot a comment", async () => {
+  it("Should vote a comment", async () => {
     prismaMock.vote.create.mockResolvedValue(mockVoteComment);
     prismaMock.user.findUnique.mockResolvedValue(mockUser);
     prismaMock.comment.update.mockResolvedValue(mockComment);
@@ -86,8 +87,35 @@ describe("PATCH /vote", () => {
       targetId: mockComment.id,
       action: "upvote",
     });
-    console.log(res.error)
+
     expect(res.status).toBe(200);
     expect(res.body).toEqual({ success: true, vote: mockVoteComment, message: "Vote created" });
+  });
+
+  it("Should vote a post", async () => {
+    prismaMock.vote.create.mockResolvedValue(mockVotePost);
+    prismaMock.user.findUnique.mockResolvedValue(mockUser);
+    prismaMock.post.update.mockResolvedValue(mockPost);
+    prismaMock.vote.aggregate.mockResolvedValue({
+      _sum: { value: 1 },
+      _count: undefined,
+      _avg: undefined,
+      _min: undefined,
+      _max: undefined
+    });
+
+    const token = jwt.sign({ userId: mockUser.id }, JWT_SECRET, { expiresIn: "1d" });
+
+    const agent = request.agent(app);
+    agent.jar.setCookie(`token=${token}`);
+
+    const res = await agent.patch("/api/vote").send({
+      type: "post",
+      targetId: mockPost.id,
+      action: "upvote",
+    });
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ success: true, vote: mockVotePost, message: "Vote created" });
   });
 });
