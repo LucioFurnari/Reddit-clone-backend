@@ -4,7 +4,7 @@ import Jwt  from "jsonwebtoken";
 const SECRET_KEY = process.env.SECRET_KEY || "faftwgt4d8b1qr4qgwgs"
 
 interface TokenPayload {
-  id: string;
+  userId: string;
   iat: number;
   exp: number;
 }
