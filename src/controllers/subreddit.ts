@@ -116,8 +116,15 @@ export async function deleteSubReddit(req: Request, res: Response) {
 
 // Get all subreddits
 export async function getAllSubReddit(req: Request, res: Response) {
-  const subreddits = await prisma.subreddit.findMany();
-  res.json(subreddits);
+  const userId = req.user!.id;
+
+  const subreddits = await prisma.subreddit.findMany({
+    where: {
+      creatorId: userId,
+    }
+  });
+
+  return res.status(200).json(subreddits);
 };
 
 // Get a specific subreddit
