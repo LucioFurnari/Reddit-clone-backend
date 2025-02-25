@@ -28,7 +28,8 @@ export async function authenticateToken(req: Request, res: Response, next: NextF
 
   try {
     const payload = verifyToken(token);
-    const user = await prisma.user.findUnique({ where: { id: payload.id } });
+
+    const user = await prisma.user.findUnique({ where: { id: payload.userId } });
 
     if (!user) {
       return res.status(401).json({ error: 'User not found' });
@@ -145,10 +146,6 @@ export async function getUserInfo(req: Request, res: Response) {
         createdAt: true,
       },
     });
-
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
-    };
 
     return res.status(200).json(user);
   } catch (error) {
