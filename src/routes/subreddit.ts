@@ -24,7 +24,7 @@ router.post("/subreddits", authenticateToken, createSubReddit);
 router.delete("/subreddits/:subredditId", authenticateToken, deleteSubReddit);
 
 // Get all Subreddit
-router.get("/subreddits", getAllSubReddit);
+router.get("/subreddits", authenticateToken, getAllSubReddit);
 
 // Search subreddit by name - use query - example: /subreddits/search?query=example
 router.get("/subreddits/search", searchSubreddits);
