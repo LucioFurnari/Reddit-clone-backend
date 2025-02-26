@@ -163,6 +163,10 @@ export async function subscribeToSubreddit(req: Request, res: Response) {
       return res.status(404).json({ error: "Subreddit not found." });
     }
 
+    if (subreddit.creatorId === userId) {
+      return res.status(400).json({ error: "You cannot subscribe to your own subreddit." });
+    };
+
     // Check if the user is already subscribed
     const existingSubscription = await prisma.userOnSubreddit.findFirst({
       where: { userId, subredditId },
@@ -201,6 +205,10 @@ export async function unsubscribeFromSubreddit(req: Request, res: Response) {
     if (!subreddit) {
       return res.status(404).json({ error: "Subreddit not found." });
     }
+
+    if (subreddit.creatorId === userId) {
+      return res.status(400).json({ error: "You cannot unsubscribe from your own subreddit." });
+    };
 
     // Check if the subscription exists
     const subscription = await prisma.userOnSubreddit.findFirst({
