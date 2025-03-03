@@ -14,8 +14,14 @@ import jwt from "jsonwebtoken";
 
 dotenv.config();
 
+const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:3000";
+
 export const app = express();
-app.use(cors());
+app.use(cors({
+  origin: CLIENT_URL,
+  credentials: true,
+  allowedHeaders: ["Content-Type", "Authorization"],
+}));
 app.use(express.json());
 app.use(cookieParser());
 
