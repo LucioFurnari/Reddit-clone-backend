@@ -65,17 +65,18 @@ export async function signup(req: Request, res: Response) {
     return res.status(201).json({ message: "User created", user });
   } catch (err) {
     if (err instanceof z.ZodError) {
-      // Handle validation errors
-      return res.status(400).json({ error: err.errors.map(e => e.message).join(', ') });
-    }
-      return  res.status(400).json({ error: "Email already exists" });
+      return res.status(400).json({ error: err.flatten().fieldErrors});
+    };
+
+    console.error("Error during login: ", err);
+    return res.status(500).json({ error: "Internal server error" });
   }
 };
 
 // Login validation schema
 const loginSchema = z.object({
-  email: z.string().email({ message: "Invalid email format" }),
-  password: z.string().min(8, { message: "Password must be at least 8 characters" }),
+  email: z.string().trim().email({ message: "Invalid email format" }).min(5, { message: "Email must be at least 5 characters" }),
+  password: z.string().trim().min(8, { message: "Password must be at least 8 characters" }),
 });
 
 type LoginData = z.infer<typeof loginSchema>;
@@ -109,8 +110,8 @@ export async function login(req: Request, res: Response) {
     return res.status(200).json({ message: "Logged in successfully", token });
   } catch (err) {
     if (err instanceof z.ZodError) {
-      return res.status(400).json({ error: err.errors.map((e) => e.message).join(", ")} );
-    }
+      return res.status(400).json({ error: err.flatten().fieldErrors});
+    };
 
     console.error("Error during login: ", err);
     return res.status(500).json({ error: "Internal server error" });
