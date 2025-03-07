@@ -58,6 +58,15 @@ export async function signup(req: Request, res: Response) {
     // Parse and validate request body
     const data: SignupData = signupSchema.parse(req.body);
 
+    // Check if user already exists
+    const existingUser = await prisma.user.findFirst({
+      where: { email: data.email },
+    });
+
+    if (existingUser) {
+      return res.status(400).json({ error: "User already exists" });
+    }
+
     const hashedPassword = await bcrypt.hash(data.password, 10);
     const user = await prisma.user.create({
       data: { email: data.email, username: data.username, password: hashedPassword },
