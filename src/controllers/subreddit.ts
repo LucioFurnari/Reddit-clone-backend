@@ -15,9 +15,20 @@ export async function createSubReddit(req: Request, res: Response) {
   try{
      // Validate input
     const { name, description } = createSubRedditSchema.parse(req.body);
+    const { bannerUrl, iconUrl, rules  } = req.body;
+
+    // Check if the subreddit already exist
+    const checkSubreddit = await prisma.subreddit.findUnique({
+      where: { name: name },
+    });
+
+    if (checkSubreddit) {
+      return res.status(409).json({ message: "Subreddit already exist."})
+    }
+
     // Create the subreddit
     const subreddit = await prisma.subreddit.create({
-      data: { name, description, creatorId },
+      data: { name, description, creatorId, bannerUrl, iconUrl, rules },
     });
   
     return res.status(201).json({ message: "Subreddit created successfully.", subreddit });
