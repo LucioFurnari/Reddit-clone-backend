@@ -108,4 +108,32 @@ export async function vote(req: Request, res: Response) {
   } catch (error) {
     return res.status(500).json({ error: "Something went wrong.", details: error });
   }
-}
+};
+
+export async function removeVote(req: Request, res: Response) {
+  try {
+    const { postId, commentId } = req.params;
+    const userId = req.user!.id;
+
+    if (!postId && !commentId) {
+      return res.status(400).json({ message: "Post id or comment id is required" });
+    };
+
+
+    const removedVote = await prisma.vote.deleteMany({
+      where: {
+        userId: userId,
+        postId: postId ? postId : undefined,
+        commentId: commentId ? commentId : undefined
+      },
+    });
+
+    if (removedVote.count === 0) {
+      return res.status(404).json({ message: "Vote not found" });
+    }
+
+    return res.status(200).json({ message: "Vote removed successfully", removedVote})
+  } catch (error) {
+    return res.status(500).json({ error: "Something went wrong.", details: error });
+  }
+};
