@@ -132,6 +132,28 @@ export async function removeVote(req: Request, res: Response) {
       return res.status(404).json({ message: "Vote not found" });
     }
 
+    // Recalculate karma
+    const karma = await prisma.vote.aggregate({
+      _sum: { value: true },
+      where: {
+        postId: postId ? postId : null,
+        commentId: commentId ? commentId : null,
+      },
+    });
+
+    // Update karma on the target
+    if (postId) {
+      await prisma.post.update({
+        where: { id: postId },
+        data: { karma: karma._sum.value || 0 },
+      });
+    } else if (commentId) {
+      await prisma.comment.update({
+        where: { id: commentId },
+        data: { karma: karma._sum.value || 0 },
+      });
+    };
+
     return res.status(200).json({ message: "Vote removed successfully", removedVote})
   } catch (error) {
     return res.status(500).json({ error: "Something went wrong.", details: error });
