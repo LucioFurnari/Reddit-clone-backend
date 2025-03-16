@@ -266,7 +266,7 @@ export async function getPosts(req: Request, res: Response) {
       },
     });
 
-    return res.status(200).json({ posts: posts });
+    return res.status(200).json({ message: "Posts fetched successfully.", posts: posts });
   } catch (error) {
     console.error("Error getting posts", error);
     return res.status(500).json({ error: "Internal server error."});
@@ -296,17 +296,17 @@ export async function getSubscribedPosts(req: Request, res: Response) {
       where: { subredditId: { in: subredditIds } },
       take: 10,
       orderBy: { createdAt: "desc" },
-      include: {
+      select: {
+        id: true,
+        title: true,
+        content: true,
         subreddit: { select: { name: true } },
         author: { select: { username: true } },
-        votes: {
-          where: { userId },
-          select: { value: true },
-        },
-      },
+        votes: { select: { value: true }, where: { userId }}
+      }
     });
 
-    return res.status(200).json({ posts })
+    return res.status(200).json({ message: "Posts fetched successfully.", posts });
   } catch (error) {
     return res.status(500).json({ message: "Something went wrong", details: error });
   }
