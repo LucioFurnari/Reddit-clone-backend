@@ -27,8 +27,21 @@ export async function createSubReddit(req: Request, res: Response) {
     }
 
     // Create the subreddit
+    // Save the creator of the subreddit as member of the subreddit
     const subreddit = await prisma.subreddit.create({
-      data: { name, description, creatorId, bannerUrl, iconUrl, rules },
+      data: { 
+        name,
+        description,
+        creatorId,
+        bannerUrl,
+        iconUrl,
+        rules,
+        members: {
+          create: {
+            userId: creatorId,
+          }
+        }
+      },
     });
   
     return res.status(201).json({ message: "Subreddit created successfully.", subreddit });
