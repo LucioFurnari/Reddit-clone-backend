@@ -211,7 +211,6 @@ const searchPostsSchema = z.object({
 });
 
 export async function searchPosts(req: Request, res: Response) {
-  console.log('Request query:', req.query);
   try {
     // Validate query parameters
     const { query } = searchPostsSchema.parse(req.query);
@@ -241,3 +240,74 @@ export async function searchPosts(req: Request, res: Response) {
     return res.status(500).json({ error: "Internal server error." });
   }
 };
+
+// Get 10 posts
+
+export async function getPosts(req: Request, res: Response) {
+  try {
+    const posts = await prisma.post.findMany({
+      select: {
+        id: true,
+        title: true,
+        content: true,
+        createdAt: true,
+        karma: true,
+        subreddit: {
+          select: { name: true, id: true, iconUrl: true }
+        },
+        author: {
+          select: { username: true, id: true }
+        },
+        _count: {
+          select: {
+            comments: true
+          }
+        }
+      },
+    });
+
+    return res.status(200).json({ posts: posts });
+  } catch (error) {
+    console.error("Error getting posts", error);
+    return res.status(500).json({ error: "Internal server error."});
+  }
+};
+
+// Get subscribed posts
+
+export async function getSubscribedPosts(req: Request, res: Response) {
+  try {
+    const userId = req.user!.id;
+
+    // Get the subreddit IDs the user is subscribed to
+    const subscribedSubreddits = await prisma.userOnSubreddit.findMany({
+      where: { userId: userId },
+      select: { subredditId: true }
+    })
+
+    const subredditIds = subscribedSubreddits.map(sub => sub.subredditId);
+
+    if (subredditIds.length === 0) {
+      return res.status(200).json([]); // No subscribed subreddits
+    };
+
+    // Fetch posts from those subreddits
+    const posts = await prisma.post.findMany({
+      where: { subredditId: { in: subredditIds } },
+      take: 10,
+      orderBy: { createdAt: "desc" },
+      include: {
+        subreddit: { select: { name: true } },
+        author: { select: { username: true } },
+        votes: {
+          where: { userId },
+          select: { value: true },
+        },
+      },
+    });
+
+    return res.status(200).json({ posts })
+  } catch (error) {
+    return res.status(500).json({ message: "Something went wrong", details: error });
+  }
+}
