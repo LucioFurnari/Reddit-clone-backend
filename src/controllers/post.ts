@@ -300,9 +300,20 @@ export async function getSubscribedPosts(req: Request, res: Response) {
         id: true,
         title: true,
         content: true,
-        subreddit: { select: { name: true } },
-        author: { select: { username: true } },
-        votes: { select: { value: true }, where: { userId }}
+        createdAt: true,
+        karma: true,
+        subreddit: {
+          select: { name: true, id: true, iconUrl: true }
+        },
+        author: {
+          select: { username: true, id: true }
+        },
+        votes: { select: { value: true }, where: { userId }},
+        _count: {
+          select: {
+            comments: true
+          }
+        }
       }
     });
 
